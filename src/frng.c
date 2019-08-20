@@ -2,6 +2,8 @@
 #include <math.h>
 #include <string.h>
 
+_Static_assert(sizeof(double)==8, "Double must be 64-bits.");
+
 double vec[2];
 
 static void _seed(const void* from)

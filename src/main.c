@@ -7,6 +7,8 @@
 #include <ptr_store.h>
 #include <array.h>
 
+_Static_assert(sizeof(float)==4, "Float must be 32 bits.");
+
 /*void test_destructor(object* ptr)
 {
 	printf("die\n");
@@ -50,12 +52,12 @@ void unshuffle(RNG with, array_t data)
 	printf(" Okay\n");
 }
 
-void minmax_longs(long* min, long* max, const array_t data)
+void minmax_int64_ts(int64_t* min, int64_t* max, const array_t data)
 {
 	for(register int i=0;i<ar_size(data);i++)
 	{
-		if(ar_get_v(data, long, i)  > *max) *max = ar_get_v(data, long, i);
-		if(ar_get_v(data, long, i) < *min) *min = ar_get_v(data, long, i);
+		if(ar_get_v(data, int64_t, i)  > *max) *max = ar_get_v(data, int64_t, i);
+		if(ar_get_v(data, int64_t, i) < *min) *min = ar_get_v(data, int64_t, i);
 	}
 }
 int valid_float(float f)
@@ -73,12 +75,12 @@ void minmax_floats(float* min, float* max, const array_t data)
 	}
 }
 
-void minmax_sbytes(signed char* min, signed char* max, const array_t data)
+void minmax_sbytes(int8_t* min, int8_t* max, const array_t data)
 {
 	for(register int i=0;i<ar_size(data);i++)
 	{
-		if(ar_get_v(data, signed char, i)  > *max) *max = ar_get_v(data, signed char, i);
-		if(ar_get_v(data, signed char, i) < *min) *min = ar_get_v(data, signed char, i);
+		if(ar_get_v(data, int8_t, i)  > *max) *max = ar_get_v(data, int8_t, i);
+		if(ar_get_v(data, int8_t, i) < *min) *min = ar_get_v(data, int8_t, i);
 	}
 }
 
@@ -92,16 +94,16 @@ void print_array(const array_t data)
 
 void unshuffle3(S_LEXENV, array_t data)
 {
-	if(ar_type(data)!=sizeof(signed char))
-		ar_reinterpret(data, sizeof(signed char));
+	if(ar_type(data)!=sizeof(int8_t))
+		ar_reinterpret(data, sizeof(int8_t));
 	RNG xoro = S_LEXCALL(rng_object, rng_new(RNG_ALGO(xoroshiro128plus)));
 	RNG frng = S_LEXCALL(rng_object, rng_new(RNG_ALGO(frng)));
 	RNG drng = S_LEXCALL(rng_object, rng_new(RNG_ALGO(drng)));
 
-	signed char bmax = INT8_MIN;
-	signed char bmin = INT8_MAX;
+	int8_t bmax = INT8_MIN;
+	int8_t bmin = INT8_MAX;
 	minmax_sbytes(&bmin, &bmax, data);
-	unsigned int seed = (0xfffa << 16) | (bmin<<8) | bmax;
+	uint32_t seed = (0xfffa << 16) | (bmin<<8) | bmax;
 	rng_seed(drng, &seed);
 	unshuffle(drng, data);
 
@@ -115,10 +117,10 @@ void unshuffle3(S_LEXENV, array_t data)
 	rng_seed(frng, fseed);
 	unshuffle(frng, data);
 	
-	long min = INT64_MAX;
-	long max = INT64_MIN;
-	ar_reinterpret(data, sizeof(long));
-	minmax_longs(&min, &max, data);
+	int64_t min = INT64_MAX;
+	int64_t max = INT64_MIN;
+	ar_reinterpret(data, sizeof(int64_t));
+	minmax_int64_ts(&min, &max, data);
 	uint64_t xseed[2];
 	xseed[0] = min;
 	xseed[1] = max;
@@ -127,22 +129,22 @@ void unshuffle3(S_LEXENV, array_t data)
 }
 void shuffle3(S_LEXENV, array_t data)
 {
-	if(ar_type(data)!=sizeof(long))
-		ar_reinterpret(data, sizeof(long));
+	if(ar_type(data)!=sizeof(int64_t))
+		ar_reinterpret(data, sizeof(int64_t));
 	RNG xoro = S_LEXCALL(rng_object, rng_new(RNG_ALGO(xoroshiro128plus)));
 	RNG frng = S_LEXCALL(rng_object, rng_new(RNG_ALGO(frng)));
 	RNG drng = S_LEXCALL(rng_object, rng_new(RNG_ALGO(drng)));
 
-	long min = INT64_MAX;
-	long max = INT64_MIN;
+	int64_t min = INT64_MAX;
+	int64_t max = INT64_MIN;
 
 	float fmin = (float)DBL_MAX;
 	float fmax = (float)-DBL_MAX;
 
-	signed char bmax = INT8_MIN;
-	signed char bmin = INT8_MAX;
+	int8_t bmax = INT8_MIN;
+	int8_t bmin = INT8_MAX;
 
-	minmax_longs(&min, &max, data);
+	minmax_int64_ts(&min, &max, data);
 	uint64_t xseed[2];
 	xseed[0] = min;
 	xseed[1] = max;
@@ -159,9 +161,9 @@ void shuffle3(S_LEXENV, array_t data)
 	rng_seed(frng, fseed);
 	shuffle(frng, data);
 
-	ar_reinterpret(data,sizeof(signed char));
+	ar_reinterpret(data,sizeof(int8_t));
 	minmax_sbytes(&bmin, &bmax, data);
-	unsigned int seed = (0xfffa << 16) | (bmin<<8) | bmax;
+	uint32_t seed = (0xfffa << 16) | (bmin<<8) | bmax;
 	rng_seed(drng, &seed);
 	shuffle(drng, data);
 }
@@ -179,7 +181,7 @@ void print_usage(char** argv)
 array_t read_whole_file(S_NAMED_LEXENV(base), FILE* fp)
 {
 	fseek(fp,0,SEEK_END);
-	long sz = ftell(fp);
+	int64_t sz = ftell(fp);
 	fseek(fp,0,SEEK_SET);
 
 	array_t ar;
