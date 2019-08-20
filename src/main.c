@@ -5,6 +5,7 @@
 #include <rng.h>
 #include <rng_algos.h>
 #include <ptr_store.h>
+#include <array.h>
 
 /*void test_destructor(object* ptr)
 {
@@ -23,78 +24,111 @@ RNG rng_object(S_LEXENV, RNG rng)
 	return snew_obj(proto)->state;
 }
 
-void shuffle_longs(RNG with, long *data, int n)
+void shuffle(RNG with, array_t data)
 {
-	register long temp;
-	for(register int i= n-1;i>0;i--)
+	printf("  -> shuffling %d objects...", (int)ar_size(data));
+	for(int i=ar_size(data)-1;i>0;i--)
 	{
 		int j = rng_next_int(with, i);
-		temp = data[i];
-		data[i] = data[j];
-		data[j] = temp;
+		ar_swap(data, i, j);
 	}
+	printf(" Okay\n");
 }
 
-void shuffle_floats(RNG with, float* data, int n)
+void unshuffle(RNG with, array_t data)
 {
-	register float temp;
-	for(register int i=n-1;i>0;i--)
+	int rng_values[ar_size(data)-1];
+	int k=0;
+	printf("  -> unshuffling %d objects...", (int)ar_size(data));
+	for(int i=ar_size(data)-1;i>0;i--)
+		rng_values[k++] = rng_next_int(with, i);
+
+	for(int i=1;i<ar_size(data);i++)
 	{
-		int j = rng_next_int(with,i);
-		temp = data[i];
-		data[i] = data[j];
-		data[j] = temp;
+		ar_swap(data, i, rng_values[--k]);
 	}
+	printf(" Okay\n");
 }
 
-void shuffle_bytes(RNG with, unsigned char* data, int n)
+void minmax_longs(long* min, long* max, const array_t data)
 {
-	register unsigned char temp;
-	for(int i=n-1;i>0;i--)
+	for(register int i=0;i<ar_size(data);i++)
 	{
-		int j = rng_next_int(with, i);
-		temp  = data[i];
-		data[i] = data[j];
-		data[j] = temp;
+		if(ar_get_v(data, long, i)  > *max) *max = ar_get_v(data, long, i);
+		if(ar_get_v(data, long, i) < *min) *min = ar_get_v(data, long, i);
 	}
 }
-
-void minmax_longs(long* min, long* max, const long* data, int n)
+int valid_float(float f)
 {
-	for(register int i=0;i<n;i++)
+	return !( (f!=f) || (f< -FLT_MAX || f> FLT_MAX));
+
+}
+void minmax_floats(float* min, float* max, const array_t data)
+{
+	for(register int i=0;i<ar_size(data);i++)
 	{
-		if(data[i] > *max) *max = data[i];
-		if(data[i] < *min) *min = data[i];
+		if(!valid_float(ar_get_v(data,float,i))) continue;
+		if(ar_get_v(data, float, i)  > *max) *max = ar_get_v(data, float, i);
+		if(ar_get_v(data, float, i) < *min) *min = ar_get_v(data, float, i);
 	}
 }
 
-void minmax_floats(float* min, float* max, const float* data, int n)
+void minmax_sbytes(signed char* min, signed char* max, const array_t data)
 {
-	for(register int i=0;i<n;i++)
+	for(register int i=0;i<ar_size(data);i++)
 	{
-		if(data[i] > *max) *max = data[i];
-		if(data[i] < *min) *min = data[i];
+		if(ar_get_v(data, signed char, i)  > *max) *max = ar_get_v(data, signed char, i);
+		if(ar_get_v(data, signed char, i) < *min) *min = ar_get_v(data, signed char, i);
 	}
 }
 
-void minmax_sbytes(signed char* min, signed char* max, const signed char* data,int n)
+void print_array(const array_t data)
 {
-	for(register int i=0;i<n;i++)
-	{
-		if(data[i] > *max) *max = data[i];
-		if(data[i] < *min) *min = data[i];
-	}
+	printf("---%d elements---\n", (int)ar_size(data));
+	for(register int i=0;i<ar_size(data);i++)
+		printf("%d ", (int)ar_get_v(data, unsigned char, i));
+	printf("\n---\n");
 }
 
-void print_array(unsigned char* data, int len)
+void unshuffle3(S_LEXENV, array_t data)
 {
-	for(register int i=0;i<len;i++)
-		printf("%d ", (int)data[i]);
-	printf("\n");
-}
+	if(ar_type(data)!=sizeof(signed char))
+		ar_reinterpret(data, sizeof(signed char));
+	RNG xoro = S_LEXCALL(rng_object, rng_new(RNG_ALGO(xoroshiro128plus)));
+	RNG frng = S_LEXCALL(rng_object, rng_new(RNG_ALGO(frng)));
+	RNG drng = S_LEXCALL(rng_object, rng_new(RNG_ALGO(drng)));
 
-void shuffle3(S_LEXENV, void* data, int raw_len)
+	signed char bmax = INT8_MIN;
+	signed char bmin = INT8_MAX;
+	minmax_sbytes(&bmin, &bmax, data);
+	unsigned int seed = (0xfffa << 16) | (bmin<<8) | bmax;
+	rng_seed(drng, &seed);
+	unshuffle(drng, data);
+
+	float fmin = (float)DBL_MAX;
+	float fmax = (float)-DBL_MAX;
+	ar_reinterpret(data, sizeof(float));
+	minmax_floats(&fmin, &fmax, data);
+	double fseed[2];
+	fseed[0] = fmin;
+	fseed[1] = fmax;
+	rng_seed(frng, fseed);
+	unshuffle(frng, data);
+	
+	long min = INT64_MAX;
+	long max = INT64_MIN;
+	ar_reinterpret(data, sizeof(long));
+	minmax_longs(&min, &max, data);
+	uint64_t xseed[2];
+	xseed[0] = min;
+	xseed[1] = max;
+	rng_seed(xoro, xseed);
+	unshuffle(xoro, data);
+}
+void shuffle3(S_LEXENV, array_t data)
 {
+	if(ar_type(data)!=sizeof(long))
+		ar_reinterpret(data, sizeof(long));
 	RNG xoro = S_LEXCALL(rng_object, rng_new(RNG_ALGO(xoroshiro128plus)));
 	RNG frng = S_LEXCALL(rng_object, rng_new(RNG_ALGO(frng)));
 	RNG drng = S_LEXCALL(rng_object, rng_new(RNG_ALGO(drng)));
@@ -108,52 +142,140 @@ void shuffle3(S_LEXENV, void* data, int raw_len)
 	signed char bmax = INT8_MIN;
 	signed char bmin = INT8_MAX;
 
-	minmax_longs(&min, &max, data, raw_len/sizeof(long));
+	minmax_longs(&min, &max, data);
 	uint64_t xseed[2];
 	xseed[0] = min;
 	xseed[1] = max;
 
 	rng_seed(xoro, xseed);
-	shuffle_longs(xoro, data, raw_len/sizeof(long));
+	shuffle(xoro, data);
 
-	minmax_floats(&fmin, &fmax, data, raw_len/sizeof(float));
+	ar_reinterpret(data, sizeof(float));
+	minmax_floats(&fmin, &fmax, data);
+
 	double fseed[2];
 	fseed[0] = fmin;
 	fseed[1] = fmax;
 	rng_seed(frng, fseed);
-	shuffle_floats(frng, data, raw_len/sizeof(float));
+	shuffle(frng, data);
 
-	minmax_sbytes(&bmin, &bmax, data, raw_len);
+	ar_reinterpret(data,sizeof(signed char));
+	minmax_sbytes(&bmin, &bmax, data);
 	unsigned int seed = (0xfffa << 16) | (bmin<<8) | bmax;
 	rng_seed(drng, &seed);
-	shuffle_bytes(drng, data, raw_len);
+	shuffle(drng, data);
 }
 
-int main()
+void print_usage(char** argv)
 {
+	printf("Usage: %s -[b]s <file> [<outfile>]\nUsage: %s -[b]u <file> [<outfile>]\n", argv[0], argv[0]);
+	printf(" <file>\t\tFile to shuffle\n");
+	printf(" <outfile>\tOutput file (only valid for buffered mode)\n");
+	printf("\ts\tShuffle\n");
+	printf("\tu\tReverse shuffle\n");
+	printf("\n\tb\tUse buffered mode instead of shuffling in place (must specify output file)\n");
+}
+
+array_t read_whole_file(S_NAMED_LEXENV(base), FILE* fp)
+{
+	fseek(fp,0,SEEK_END);
+	long sz = ftell(fp);
+	fseek(fp,0,SEEK_SET);
+
+	array_t ar;
 	MANAGED({
-		void * data = smalloc(255);
-		int raw_len = 255;
-		for(int i=0;i<raw_len;i++)
-			((unsigned char*)data)[i] = i;
+		void* buf = smalloc(sz);
+		fread(buf, 1, sz, fp);
+		ar = ar_create_memory_from(base, buf, 1, sz);
+	});
+	return ar;
+}
 
-		print_array(data,raw_len);
+int main(int argc, char** argv)
+{
+	int is_buffered=0;
+	int i=1;
+	int is_unshuffling =0;
+	if(!argv[1] || !argv[2] || argv[1][0] != '-')
+	{
+		print_usage(argv);
+		return 1;	
+	}
+	else {
+do_switch:
+		switch(argv[1][i])
+		{
+			case 'b':
+				if(is_buffered)
+				{
+					print_usage(argv);
+					return 1;
+				}
+				is_buffered = 1;
+				i+=1;
+				goto do_switch;
+			case 'u':
+				is_unshuffling=1;
+				break;
+			case 's':
+				break;
+			default:
+				print_usage(argv);
+				return 1;
+		}
+	}
 
-		shuffle3(LEXENV, data, raw_len);
-		
-		print_array(data,raw_len);
+	if(is_buffered && !argv[3])
+	{
+		printf("Buffered option requires an output file\n");
+		return 1;
+	}
 
-		/*char* buffer = smalloc(32);
-		int* nw = snew(int);
-		object proto = OBJ_PROTO;
-		proto.destructor = &test_destructor;
-		proto.constructor = &test_destructor;
-		object* obj = snew_obj(proto);
-		*nw=22;
-		sprintf(buffer, "hello %d\n", *nw);
-		sdelete(nw);
-		sdelete(obj);
-		printf("%s", buffer);*/
+	MANAGED_RETURNABLE(int ,{
+		array_t array;
+	       
+		if(is_buffered)
+		{
+			FILE* infile = fopen(argv[2], "rb");
+			if(!infile)
+			{
+				printf("! could not open file for reading\n");
+				MANAGED_RETURN(1);
+			}
+			array = read_whole_file(LEXENV, infile);
+			fclose(infile);	
+			printf("  buffered file (%ld bytes)\n", ar_size(array));
+		}
+		else {
+			FILE* infile = fopen(argv[2], "r+b");
+			if(!infile)
+			{
+				printf("! could not open file for reading+writing\n");
+				MANAGED_RETURN(1);
+			}
+			array = ar_create_file(LEXENV, infile, 1, 1);
+		}
+
+		//print_array(array);
+
+		if(is_unshuffling) unshuffle3(LEXENV, array);
+		else shuffle3(LEXENV, array);
+	
+		if(is_buffered)
+		{
+			FILE* outfile = fopen(argv[3], "wb");
+			if(!outfile)
+			{
+				printf("! could not open outfile for writing\n");
+				MANAGED_RETURN(1);
+			}
+			void* wbuf = smalloc(ar_full_size(array));
+			if(!ar_ndump(array, wbuf, ar_full_size(array), 0, ar_size(array)))
+				printf("W memory dump failed, continuing anyway\n");
+			fwrite(wbuf, 1, ar_full_size(array), outfile);
+			fclose(outfile);
+			printf("  write completed (%d bytes)\n", (int)ar_size(array));
+		}
 	});
 	return 0;
 }

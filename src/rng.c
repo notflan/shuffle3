@@ -45,7 +45,8 @@ int rng_next_int_bounded(RNG algo, int min, int max)
 
 int rng_next_int(RNG algo, int max)
 {
-	return (int)floor(algo->sample() * (double)max);
+	double sample = algo->sample();
+	return (int)floor(sample * (double)max);
 }
 
 void* rng_next(RNG algo, void* data, int len)

@@ -7,6 +7,7 @@ double vec[2];
 static void _seed(const void* from)
 {
 	memcpy(vec, from, sizeof(double)*2);
+
 }
 
 double fract(double x)

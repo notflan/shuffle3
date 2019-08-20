@@ -40,6 +40,7 @@ extern const object OBJ_PROTO;
 #define strack _store_first_empty(__internal_store, 0)->ptr = 
 #define strack_obj _store_first_empty(__internal_store, 1)->ptr =
 
+#define S_NAMED_LEXENV(n) store_t* n
 #define S_LEXENV store_t* __internal_store
 #define S_LEXCALL(f, ...) f(__internal_store, __VA_ARGS__)
 #define LEXENV __internal_store
@@ -51,8 +52,25 @@ extern const object OBJ_PROTO;
 #define MANAGED(var) { \
 				store_t * __internal_store = new_store(); \
 				var; \
+				goto __internal_breakpoint; /*to suppress unused warning*/ \
+				__internal_breakpoint: \
 				destroy_store(__internal_store); \
 			}
+#define MANAGED_RETURNABLE(type, var) { \
+						type __internal_retval; \
+						int __internal_has_set_return =0; \
+						store_t * __internal_store = new_store(); \
+						var; \
+						goto __internal_breakpoint; /*to suppress unused warning*/ \
+						__internal_breakpoint: \
+						destroy_store(__internal_store); \
+						if(__internal_has_set_return) return __internal_retval; \
+					}
+#define MANAGED_RETURN(value) __internal_retval = value; \
+				__internal_has_set_return = 1; \
+				MANAGED_BREAK
+
+#define MANAGED_BREAK goto __internal_breakpoint
 
 #define STORE_LEXBIND(type, name) type name = *((type*)store_malloc(__internal_store, sizeof(type)));
 
