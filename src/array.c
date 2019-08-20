@@ -28,7 +28,7 @@ static void* _ar_memory_get(struct array* this, long i)
 	return &this->data[i*this->element];
 }
 
-static const void _ar_memory_set(struct array* this, long i, const void* item)
+static void _ar_memory_set(struct array* this, long i, const void* item)
 {
 	if(i<0 || i>= this->size) return;
 

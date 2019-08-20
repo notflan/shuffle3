@@ -77,7 +77,7 @@ void _seed(const void* from)
 
 double _sample() 
 {
-	return (next() & ((1L << 53) - 1)) * (1.00 / (1L << 53));
+	return (next() & ((INT64_C(1) << 53) - 1)) * (1.00 / (INT64_C(1) << 53));
 }
 
 RNG_IMPL_DEFINITION(xoroshiro128plus)
