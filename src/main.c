@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <float.h>
 #include <stdint.h>
+#include <string.h>
 
 #include <rng.h>
 #include <rng_algos.h>
@@ -8,6 +9,8 @@
 #include <array.h>
 
 _Static_assert(sizeof(float)==4, "Float must be 32 bits.");
+
+int surpress_out=0;
 
 /*void test_destructor(object* ptr)
 {
@@ -28,20 +31,20 @@ RNG rng_object(S_LEXENV, RNG rng)
 
 void shuffle(RNG with, array_t data)
 {
-	printf("  -> shuffling %d objects...", (int)ar_size(data));
+	if(!surpress_out) printf("  -> shuffling %d objects...", (int)ar_size(data));
 	for(int i=ar_size(data)-1;i>0;i--)
 	{
 		int j = rng_next_int(with, i);
 		ar_swap(data, i, j);
 	}
-	printf(" Okay\n");
+	if(!surpress_out) printf(" Okay\n");
 }
 
 void unshuffle(RNG with, array_t data)
 {
 	int rng_values[ar_size(data)-1];
 	int k=0;
-	printf("  -> unshuffling %d objects...", (int)ar_size(data));
+	if(!surpress_out) printf("  -> unshuffling %d objects...", (int)ar_size(data));
 	for(int i=ar_size(data)-1;i>0;i--)
 		rng_values[k++] = rng_next_int(with, i);
 
@@ -49,7 +52,7 @@ void unshuffle(RNG with, array_t data)
 	{
 		ar_swap(data, i, rng_values[--k]);
 	}
-	printf(" Okay\n");
+	if(!surpress_out) printf(" Okay\n");
 }
 
 void minmax_int64_ts(int64_t* min, int64_t* max, const array_t data)
@@ -171,10 +174,14 @@ void shuffle3(S_LEXENV, array_t data)
 void print_usage(char** argv)
 {
 	printf("Usage: %s -[b]s <file> [<outfile>]\nUsage: %s -[b]u <file> [<outfile>]\n", argv[0], argv[0]);
+	printf("Usage: %s -S <string>|-\nUsage: %s -U <string>|-\n", argv[0], argv[0]);
 	printf(" <file>\t\tFile to shuffle\n");
 	printf(" <outfile>\tOutput file (only valid for buffered mode)\n");
+	printf(" <string>\tThe string to shuffle (for -(S|U)). If `-`, read from stdin\n");
 	printf("\ts\tShuffle\n");
 	printf("\tu\tReverse shuffle\n");
+	printf("\tS\tShuffle string\n");
+	printf("\tU\tReverse shuffle string\n");
 	printf("\n\tb\tUse buffered mode instead of shuffling in place (must specify output file)\n");
 }
 
@@ -191,6 +198,77 @@ array_t read_whole_file(S_NAMED_LEXENV(base), FILE* fp)
 		ar = ar_create_memory_from(base, buf, 1, sz);
 	});
 	return ar;
+}
+
+#define BUFSIZE 512
+#define BUFMIN 128
+
+char* read_stdin()
+{
+	char* input, *p;
+	int len,remain,n,size;
+
+	size = BUFSIZE;
+	input = malloc(size);
+	memset(input,0,size);
+	len=0;
+	remain = size;
+
+	while(!feof(stdin))
+	{
+		if(remain<= BUFMIN)
+		{
+			remain+=size;
+			size *=2;
+			p = realloc(input, size);
+			if(p==NULL) {
+				free(input);
+				return NULL;
+			}
+			input = p;
+		}
+		fgets(input+len, remain, stdin);
+		n+=strlen(input+len);
+		len+=n;
+		remain-=n;
+	}
+	return input;
+}
+
+int string_shuffle(char* string, int un)
+{
+	if(!string)
+	{
+		char* ptr = read_stdin();
+		if(!ptr) { 
+			printf("! read from stdin failed\n");
+			return -1;
+		}
+		int ret = string_shuffle(ptr, un);
+		free(ptr);
+		return ret;
+	}
+	else if(strcmp(string, "-") == 0)
+	{
+		return string_shuffle(NULL, un);
+	}
+	else {
+		surpress_out=1;
+		MANAGED({
+			array_t ar = ar_create_memory_from(LEXENV, string, 1, strlen(string));
+
+			if(un) unshuffle3(LEXENV, ar);
+			else shuffle3(LEXENV, ar);
+
+			ar_reinterpret(ar, sizeof(char));
+
+			for(int i=0;i<ar_size(ar);i++)
+			{
+				printf("%c", ar_get_v(ar, char, i));
+			}
+		});
+		return 0;
+	}
 }
 
 int main(int argc, char** argv)
@@ -221,6 +299,10 @@ do_switch:
 				break;
 			case 's':
 				break;
+			case 'S':
+				return string_shuffle(argv[2], 0);
+			case 'U':
+				return string_shuffle(argv[2], 1);
 			default:
 				print_usage(argv);
 				return 1;
