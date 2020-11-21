@@ -1,10 +1,45 @@
+SRC = $(wildcard src/*.c)
+INCLUDE = include/
 
+PROJECT=shuffle3
 
-all: clean shuffle3
+BUILD=build
+
+CFLAGS+= $(addprefix -I,$(INCLUDE)) -Wall -pedantic --std=gnu11
+LDFLAGS+= -lm
+
+RELEASE_CFLAGS?= -O3 -march=native -flto -fgraphite
+RELEASE_LDFLAGS?= -O3 -flto
+
+DEBUG_CFLAGS?= -g -O0
+DEBUG_LDFLAGS?= -O0
+
+OBJ = $(addprefix obj/,$(SRC:.c=.o))
+
+.PHONY: release
+release: | dirs $(BUILD)/$(PROJECT)-release
+
+.PHONY: debug
+debug: | dirs $(BUILD)/$(PROJECT)-debug
+
+dirs:
+	@mkdir -p obj/src
+	@mkdir -p $(BUILD)
+
+obj/%.o: %.c
+	$(CC) -c $< $(CFLAGS) -o $@ $(LDFLAGS)
+
+$(BUILD)/$(PROJECT)-release: CFLAGS+= $(RELEASE_CFLAGS)
+$(BUILD)/$(PROJECT)-release: LDFLAGS+= $(RELEASE_LDFLAGS)
+$(BUILD)/$(PROJECT)-release: $(OBJ)
+	$(CC) $^ $(CFLAGS) -o $@ $(LDFLAGS)
+	strip $@
+
+$(BUILD)/$(PROJECT)-debug: CFLAGS+= $(DEBUG_CFLAGS)
+$(BUILD)/$(PROJECT)-debug: LDFLAGS+= $(DEBUG_LDFLAGS)
+$(BUILD)/$(PROJECT)-debug: $(OBJ)
+	$(CC) $^ $(CFLAGS) -o $@ $(LDFLAGS)
 
 clean:
-	rm -f build/*
-
-shuffle3:
-	gcc  src/*.c -Iinclude/ -g -Wall -pedantic --std=gnu11 -o build/$@ -lm
-	./build/$@
+	rm -rf obj
+	rm -f $(BUILD)/*
