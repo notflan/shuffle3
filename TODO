@@ -1,0 +1,1 @@
+Complete rewrite using `mmap` et al. Maybe in Rust of C++ idk
