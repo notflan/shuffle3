@@ -5,10 +5,12 @@ PROJECT=shuffle3
 
 BUILD=build
 
+OPT_FLAGS?= -march=native -fgraphite -fopenmp -floop-parallelize-all -ftree-parallelize-loops=4
+
 CFLAGS+= $(addprefix -I,$(INCLUDE)) -Wall -pedantic --std=gnu11
 LDFLAGS+= -lm
 
-RELEASE_CFLAGS?= -O3 -march=native -flto -fgraphite
+RELEASE_CFLAGS?= -O3 -flto $(OPT_FLAGS)
 RELEASE_LDFLAGS?= -O3 -flto
 
 DEBUG_CFLAGS?= -g -O0

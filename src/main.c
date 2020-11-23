@@ -2,6 +2,7 @@
 #include <float.h>
 #include <stdint.h>
 #include <string.h>
+#include <assert.h>
 
 #include <rng.h>
 #include <rng_algos.h>
@@ -194,7 +195,14 @@ array_t read_whole_file(S_NAMED_LEXENV(base), FILE* fp)
 	array_t ar;
 	MANAGED({
 		void* buf = smalloc(sz);
-		fread(buf, 1, sz, fp);
+			
+		register size_t read;
+		register size_t full=0;
+		while ((read=fread(buf, 1, sz-full, fp))>0)
+			full+=read;
+		
+		assert(full == sz);
+	
 		ar = ar_create_memory_from(base, buf, 1, sz);
 	});
 	return ar;
