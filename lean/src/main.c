@@ -7,6 +7,7 @@
 #include <shuffle3.h>
 #include <panic.h>
 #include <reinterpret.h>
+#include <map.h>
 
 _Static_assert(sizeof(float)==sizeof(uint32_t), "float is not 32 bits");
 
@@ -20,6 +21,14 @@ static void unshuffle_file(const char* filename)
 {
 	panic("unimplemented");
 }*/
+
+static void* map_callback(mmap_t map)
+{
+	printf("fd %d mapped (sz %lu) (ptr %p)\n", map.fd, map.len, map.ptr);	
+
+
+	return NULL;
+}
 
 static void do_test()
 {
@@ -45,7 +54,10 @@ static void do_test()
 
 int main(int argc, char** argv)
 {
-	do_test();	
+	do_test();
+	if( argv[1] ) {
+		map_and_then(argv[1], &map_callback);
+	}
 
 	return 0;
 }
