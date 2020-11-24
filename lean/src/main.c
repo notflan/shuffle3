@@ -1,5 +1,6 @@
 
 #include <shuffle3.h>
+#include <panic.h>
 
 static void shuffle_file(const char* filename)
 {
@@ -13,5 +14,6 @@ static void unshuffle_file(const char* filename)
 
 int main(int argc, char** argv)
 {
+
 	return 0;
 }

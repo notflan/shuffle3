@@ -14,14 +14,7 @@ extern "C" {
 #define _FORCE_INLINE __attribute__((gnu_inline)) extern inline
 #endif
 
-struct panicinfo {
-	const char* file;
-	const char* function;
-	int line;
-};
 
-void _do_panic(struct panicinfo pi, const char* fmt, ...) __attribute__((noreturn, cold));
-#define panic(fmt, ...) _do_panic( (struct panicinfo){.file = __FILE__, .function = __func__, .line = __LINE__}, fmt __VA_OPT__(,) __VA_ARGS__)
 
 #ifdef __cplusplus
 }

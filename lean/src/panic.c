@@ -2,9 +2,9 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#include <shuffle3.h>
+#include <panic.h>
 
-__attribute__((noreturn, cold)) void _do_panic(struct panicinfo info, const char* fmt, ...)
+__attribute__((noreturn)) void _do_panic(struct panicinfo info, const char* fmt, ...)
 {
 	va_list li;
 	va_start(li, fmt);
