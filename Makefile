@@ -5,7 +5,8 @@ PROJECT=shuffle3
 
 BUILD=build
 
-OPT_FLAGS?= -march=native -fgraphite -fopenmp -floop-parallelize-all -ftree-parallelize-loops=4
+OPT_FLAGS?= -march=native -fgraphite -fopenmp -floop-parallelize-all -ftree-parallelize-loops=4 \
+	    -floop-interchange -ftree-loop-distribution -floop-strip-mine -floop-block
 
 CFLAGS+= $(addprefix -I,$(INCLUDE)) -Wall -pedantic --std=gnu11
 LDFLAGS+= -lm
