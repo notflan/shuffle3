@@ -18,8 +18,8 @@ typedef struct mmap {
 int open_and_map(const char* file, mmap_t* restrict ptr);
 int unmap_and_close(mmap_t map);
 
-typedef void* (*map_cb)(mmap_t map);
-void* map_and_then(const char* file, map_cb callback);
+typedef void* (*map_cb)(mmap_t map, void* user);
+void* map_and_then(const char* file, map_cb callback, void* user);
 
 #ifdef __cplusplus
 }

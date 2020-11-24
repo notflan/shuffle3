@@ -11,6 +11,11 @@
 
 _Static_assert(sizeof(float)==sizeof(uint32_t), "float is not 32 bits");
 
+struct prog_args {
+	int argc;
+	char ** argv;
+};
+
 /*
 static void shuffle_file(const char* filename)
 {
@@ -22,14 +27,29 @@ static void unshuffle_file(const char* filename)
 	panic("unimplemented");
 }*/
 
-static void* map_callback(mmap_t map)
+static void* map_callback(mmap_t map, void* user)
 {
-	printf("fd %d mapped (sz %lu) (ptr %p)\n", map.fd, map.len, map.ptr);	
+	struct prog_args args = *(struct prog_args*)user;
+
+	dprintf("fd %d mapped (sz %lu) (ptr %p)\n", map.fd, map.len, map.ptr);	
 
 
 	return NULL;
 }
 
+
+int main(int argc, char** argv)
+{
+	struct prog_args args = {.argc = argc, .argv = argv};
+	
+	if( argv[1] ) {
+		map_and_then(argv[1], &map_callback, &args);
+	}
+
+	return 0;
+}
+
+#ifdef _TEST
 static void do_test()
 {
 	char* string = "Hello world.. how are you?????";
@@ -51,13 +71,4 @@ static void do_test()
 	}
 	printf("OK!\n\n");
 }
-
-int main(int argc, char** argv)
-{
-	do_test();
-	if( argv[1] ) {
-		map_and_then(argv[1], &map_callback);
-	}
-
-	return 0;
-}
+#endif
