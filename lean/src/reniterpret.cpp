@@ -7,7 +7,7 @@ static inline T* bytes_to_t(std::uint8_t* ptr, std::size_t ptr_sz, std::size_t* 
 	span<uint8_t> bytes(ptr, ptr_sz);
 	auto tout = bytes.reinterpret<T>();
 	*nsize = tout.size();
-	return longs.as_ptr();
+	return tout.as_ptr();
 }
 
 extern "C" {	

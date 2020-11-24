@@ -4,6 +4,15 @@
 #include <panic.h>
 
 #ifdef __cplusplus
+#define restrict __restrict__
+#include <cstddef>
+#include <cstdint>
+#else
+#include <stddef.h>
+#include <stdint.h>
+#endif
+
+#ifdef __cplusplus
 template<typename T>
 struct span {
 	inline span(T* ptr, std::size_t len) : ptr(ptr), len(len) {}
@@ -14,17 +23,17 @@ struct span {
 		auto bytes = size_bytes();
 		//if (len_b % sizeof(U) != 0) panic("Cannot reinterpret T to U due to unmatch sizing constraints.");
 
-		return span<U>(ptr, bytes / sizeof(U));
+		return span<U>((U*)ptr, bytes / sizeof(U));
 	}
 
-	inline const T& operator[](std::size_t idx) const
+	inline const T& operator[](std::size_t i) const
 	{
-		if (idx >= len) panic("Out of bounds access");
+		if (i >= len) panic("Out of bounds access");
 		return ptr[i];
 	}
-	inline T& operator[](std::size_t idx)
+	inline T& operator[](std::size_t i)
 	{
-		if(idx >= len) panic("Out of bounds access");
+		if(i >= len) panic("Out of bounds access");
 		return ptr[i];
 	}
 
@@ -43,7 +52,7 @@ private:
 
 extern "C" {
 #endif
-uint64_t* bytes_to_long(uint8_t* ptr, size_t ptr_sz, size_t* restrict_ nsize);
+uint64_t* bytes_to_long(uint8_t* ptr, size_t ptr_sz, size_t* restrict nsize);
 float*    bytes_to_float(uint8_t* ptr, size_t ptr_sz, size_t* restrict nsize);
 #ifdef __cplusplus
 }
