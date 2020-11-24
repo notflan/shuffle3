@@ -6,7 +6,9 @@ PROJECT=shuffle3
 
 COMMON_FLAGS = -Wall -pedantic $(addprefix -I,$(INCLUDE)) -fno-strict-aliasing
 
-OPT_FLAGS?=     -fgraphite -march=native
+OPT_FLAGS?= -march=native -fgraphite -fopenmp -floop-parallelize-all -ftree-parallelize-loops=4 \
+	    -floop-interchange -ftree-loop-distribution -floop-strip-mine -floop-block
+
 CXX_OPT_FLAGS?= $(OPT_FLAGS) -felide-constructors
 
 CFLAGS   += $(COMMON_FLAGS) --std=gnu11
