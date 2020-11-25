@@ -8,6 +8,7 @@
 #include <panic.h>
 #include <reinterpret.h>
 #include <map.h>
+#include <rng.h>
 
 _Static_assert(sizeof(float)==sizeof(uint32_t), "float is not 32 bits");
 
@@ -42,6 +43,8 @@ int main(int argc, char** argv)
 {
 	struct prog_args args = {.argc = argc, .argv = argv};
 	
+	frng_test();
+
 	if( argv[1] ) {
 		map_and_then(argv[1], &map_callback, &args);
 	}

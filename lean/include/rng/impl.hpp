@@ -27,8 +27,8 @@ struct RNG {
        	inline std::int64_t next_long(std::int64_t max) { return next_long(0, max); }
 	std::int64_t next_long(std::int64_t min, std::int64_t max);
 
-	inline float  next_float() { return (float)sample(); }
-	inline double next_double() { return sample(); }
+	inline virtual float  next_float() { return (float)sample(); }
+	inline virtual double next_double() { return sample(); }
 protected:
 	virtual double sample() = 0;
 };

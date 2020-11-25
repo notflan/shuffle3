@@ -1,48 +1,26 @@
 #include <rng/impl.hpp>
 #include <rng/frng.hpp>
-#include <cmath>
+#include <iostream>
 
-template<std::size_t N>
-constexpr inline double dot(const std::array<double, N>& v, const std::array<double, N>& u)
-{
-	double res=0;
-	for(std::size_t i=0;i<N;i++)
+namespace rng {	
+	using namespace std;
+	inline void test()
 	{
-		res += v[i] * u[i];
+		frng rng(1.0, 2.0);
+
+		for(int i=0;i<10;i++) {
+			double d = rng.next_double();
+			long l = rng.next_long(0, 100);
+
+			cout << "Sampled: " << d << endl; 
+			cout << "Long: " << l << endl;
+		}
 	}
-	return res;
+
 }
 
-inline constexpr double fract(double x)
+
+extern "C" void frng_test()
 {
-	return x - floor(x);
-}
-
-namespace rng {
-	inline constexpr double sample_double(const std::array<double, 2>& state)
-	{
-		const constexpr std::array<double, 2> vec2 = {  12.9898, 78.223  };
-		return fract(sin(dot(state, vec2)) * 43758.5453);
-	}
-	inline void update_state(std::array<double, 2>& state, double r)
-	{
-		float v1 = (float)state[0];
-		float v2 = (float)state[1];
-
-		std::array<double, 2> nvec = {
-			r,
-			(double)v2,
-		};
-
-		state[0] = sample_double(nvec);
-
-		nvec[1] = (double)v1;
-		state[1] = sample_double(nvec);
-	}
-	double frng::sample()
-	{
-		double res = sample_double(state);
-		update_state(state, res);
-		return res;
-	}
+	rng::test();
 }
