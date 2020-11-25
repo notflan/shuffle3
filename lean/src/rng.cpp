@@ -33,7 +33,7 @@ std::int32_t RNG::next_int(std::int32_t min, std::int32_t max)
 
 std::int32_t RNG::next_int()
 {
-	return next_int(INT32_MIN, INT32_MAX);
+	return (chance() ? 1 : -1) * (std::int32_t)floor(sample() * (double)INT32_MAX);
 }
 
 std::int64_t RNG::next_long(std::int64_t min, std::int64_t max)
@@ -43,5 +43,5 @@ std::int64_t RNG::next_long(std::int64_t min, std::int64_t max)
 
 std::int64_t RNG::next_long()
 {
-	return next_long(INT64_MIN, INT32_MAX);
+	return (chance() ? 1l : -1l) * (std::int64_t)floor(sample() * (double)INT64_MAX);
 }

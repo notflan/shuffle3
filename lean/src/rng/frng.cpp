@@ -10,7 +10,7 @@ namespace rng {
 
 		for(int i=0;i<10;i++) {
 			double d = rng.next_double();
-			long l = rng.next_long(0, 100);
+			long l = rng.next_long(-10, 10);
 
 			std::array<bool, 10> ar;
 			for(auto& i : ar) i = rng.chance();
