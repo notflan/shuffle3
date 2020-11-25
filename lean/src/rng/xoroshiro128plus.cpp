@@ -12,26 +12,6 @@ static inline constexpr u64 rotl(u64 x, int k)
 
 namespace rng
 {
-	static inline void xo_test()
-	{
-		using namespace std;
-		XO rng(100ul, 123123123ul);
-
-		for(int i=0;i<10;i++) {
-			double d = rng.next_double();
-			long l = rng.next_long(-10, 10);
-
-			std::array<bool, 10> ar;
-			for(auto& i : ar) i = rng.chance();
-
-			cout << "XO Sampled: " << d << endl; 
-			cout << "XO Long: " << l << endl;
-			cout << "XO Bools: [ ";
-			for(const auto& i : ar) cout << i << " ";
-			cout << "]" << endl;
-		}
-	}
-
 	inline constexpr u64 next(XO::State& s)
 	{
 		u64 s0 = s[0];
@@ -103,9 +83,4 @@ namespace rng
 	{
 		return (next(state) & ((INT64_C(1) << 53) - 1)) * (1.00 / (INT64_C(1) << 53));
 	}
-}
-
-extern "C" void xorng_test()
-{
-	return rng::xo_test();
 }

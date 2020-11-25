@@ -32,6 +32,6 @@ extern "C" void rng_test()
 	cout << "drng:" << endl;
 	rng::test_algo(rng::drng(10));
 
-	cout << "xoroshiro128+" << endl;
+	cout << "xoroshiro128+:" << endl;
 	rng::test_algo(rng::xoroshiro128plus(100ul, 200ul));
 }

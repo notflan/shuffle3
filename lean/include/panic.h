@@ -17,7 +17,7 @@ void _do_panic(struct panicinfo pi, const char* fmt, ...) __attribute__((noretur
 extern "C++" {
 #include <utility>
 	template<typename... Args>
-	__attribute__((noreturn)) inline void _real_panic(const char* file, const char* function, int line, const char* fmt, const Args&... args)
+	__attribute__((noreturn)) inline void _real_panic(const char* file, const char* function, int line, const char* fmt, Args&&... args)
 	{
 		panicinfo i = { file, function, line };
 		_do_panic(i, fmt, std::forward<Args>(args)...);

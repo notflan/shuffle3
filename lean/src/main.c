@@ -44,9 +44,10 @@ int main(int argc, char** argv)
 	struct prog_args args = {.argc = argc, .argv = argv};
 	
 	rng_test();
-	//frng_test();
-	//xorng_test();
-	//drng_test();
+	
+	rng_t r = rng_new(RNG_INIT(RNG_KIND_FRNG, frng = { { 1.0, 2.0 } }));
+	rng_test_spec(r);
+	rng_free(r);
 
 	if( argv[1] ) {
 		map_and_then(argv[1], &map_callback, &args);
@@ -56,7 +57,7 @@ int main(int argc, char** argv)
 }
 
 #ifdef _TEST
-static void do_test()
+static void do_reinterpret_test()
 {
 	char* string = "Hello world.. how are you?????";
 	size_t string_sz = strlen(string);

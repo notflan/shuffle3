@@ -28,6 +28,8 @@ struct RNG {
 
 	inline virtual float  next_float() { return (float)sample(); }
 	inline virtual double next_double() { return sample(); }
+
+	virtual ~RNG() = default;
 protected:
 	virtual double sample() = 0;
 };
