@@ -1,5 +1,7 @@
 SRC_C   = $(wildcard src/*.c)
 SRC_CXX = $(wildcard src/*.cpp)
+SRC_CXX+= $(wildcard src/rng/*.cpp)
+
 INCLUDE = include
 
 PROJECT=shuffle3
@@ -41,6 +43,7 @@ debug: | dirs $(PROJECT)-debug
 
 dirs:
 	@mkdir -p obj/c{,xx}/src
+	@mkdir -p obj/cxx/src/rng
 
 obj/c/%.o: %.c
 	$(CC) -c $< $(CFLAGS) -o $@ $(LDFLAGS)
