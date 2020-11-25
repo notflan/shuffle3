@@ -43,9 +43,10 @@ int main(int argc, char** argv)
 {
 	struct prog_args args = {.argc = argc, .argv = argv};
 	
-	frng_test();
-	xorng_test();
-	drng_test();
+	rng_test();
+	//frng_test();
+	//xorng_test();
+	//drng_test();
 
 	if( argv[1] ) {
 		map_and_then(argv[1], &map_callback, &args);

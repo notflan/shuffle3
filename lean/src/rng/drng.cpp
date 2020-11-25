@@ -2,7 +2,7 @@
 #include <ctime>
 #include <iostream>
 
-#include <rng/drng.h>
+#include <rng/drng.hpp>
 
 namespace rng
 {
