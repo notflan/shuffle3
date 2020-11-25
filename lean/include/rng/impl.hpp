@@ -23,7 +23,6 @@ struct RNG {
 	std::int32_t next_int(std::int32_t min, std::int32_t max);
 
 	virtual std::int64_t next_long();
-
        	inline std::int64_t next_long(std::int64_t max) { return next_long(0, max); }
 	std::int64_t next_long(std::int64_t min, std::int64_t max);
 

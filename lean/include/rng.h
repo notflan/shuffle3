@@ -7,10 +7,13 @@ extern "C" {
 
 // Tests
 void frng_test();
+void xorng_test();
+void drng_test();
 #ifdef __cplusplus
 }
 // RNG interfaces
 #include <rng/frng.hpp>
+#include <rng/xoroshiro128plus.hpp>
 
 #endif
 

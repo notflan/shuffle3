@@ -4,7 +4,7 @@
 
 namespace rng {	
 	using namespace std;
-	inline void test()
+	static inline void f_test()
 	{
 		frng rng(1.0, 2.0);
 
@@ -22,11 +22,10 @@ namespace rng {
 			cout << "]" << endl;
 		}
 	}
-
 }
 
 
 extern "C" void frng_test()
 {
-	rng::test();
+	rng::f_test();
 }
