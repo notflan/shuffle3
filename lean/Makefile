@@ -9,7 +9,8 @@ PROJECT=shuffle3
 COMMON_FLAGS = -Wall -pedantic $(addprefix -I,$(INCLUDE)) -fno-strict-aliasing
 
 OPT_FLAGS?= -march=native -fgraphite -fopenmp -floop-parallelize-all -ftree-parallelize-loops=4 \
-	    -floop-interchange -ftree-loop-distribution -floop-strip-mine -floop-block
+	    -floop-interchange -ftree-loop-distribution -floop-strip-mine -floop-block \
+	    -fno-stack-check
 
 CXX_OPT_FLAGS?= $(OPT_FLAGS) -felide-constructors
 
