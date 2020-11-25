@@ -12,8 +12,14 @@ namespace rng {
 			double d = rng.next_double();
 			long l = rng.next_long(0, 100);
 
+			std::array<bool, 10> ar;
+			for(auto& i : ar) i = rng.chance();
+
 			cout << "Sampled: " << d << endl; 
 			cout << "Long: " << l << endl;
+			cout << "Bools: [ ";
+			for(const auto& i : ar) cout << i << " ";
+			cout << "]" << endl;
 		}
 	}
 

@@ -17,7 +17,7 @@ void RNG::bytes(unsigned char* ptr, std::size_t len)
 
 bool RNG::chance()
 {
-	return next_long() <= 0;
+	return chance(.5);
 }
 
 bool RNG::chance(double d)
