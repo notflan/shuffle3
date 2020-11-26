@@ -10,7 +10,7 @@ enum  work_buffer_opts {
 	WORK_BO_BUFFERED=1, // Read whole input into memory then perform
 };
 
-typedef struct {
+typedef struct __work_args {
 	enum {
 		OP_SHUFFLE_IP, // Shuffle in place
 		OP_SHUFFLE_OP, // Shuffle out of place
