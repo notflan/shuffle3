@@ -16,7 +16,7 @@ int open_and_map(const char* file, mmap_t* restrict ptr)
 {
 	int fd;
 	struct stat st;
-	if ((fd = open(file, O_RDONLY, FILEMODE)) < 0) {
+	if ((fd = open(file, O_RDWR, FILEMODE)) < 0) {
 		perror("Failed to open file");
 		return 0;
 	}
@@ -29,7 +29,7 @@ int open_and_map(const char* file, mmap_t* restrict ptr)
 
 	register struct mmap map = { .fd = fd, .ptr = NULL, .len = st.st_size };
 
-	if ((map.ptr = mmap(NULL, map.len, PROT_READ, MAP_SHARED,fd, 0)) == MAP_FAILED) {
+	if ((map.ptr = mmap(NULL, map.len, PROT_READ | PROT_WRITE, MAP_SHARED,fd, 0)) == MAP_FAILED) {
 		perror("mmap() failed");
 		close(fd);
 		return 0;

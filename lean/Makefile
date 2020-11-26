@@ -16,7 +16,7 @@ CXX_OPT_FLAGS?= $(OPT_FLAGS) -felide-constructors
 
 CFLAGS   += $(COMMON_FLAGS) --std=gnu11
 CXXFLAGS += $(COMMON_FLAGS) --std=gnu++20 -fno-exceptions
-LDFLAGS  += 
+LDFLAGS  += -lfmt 
 
 RELEASE_CFLAGS?=   -O3 -flto $(OPT_FLAGS)
 RELEASE_CXXFLAGS?= -O3 -flto $(CXX_OPT_FLAGS)

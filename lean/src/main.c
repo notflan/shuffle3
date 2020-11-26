@@ -45,14 +45,18 @@ int main(int argc, char** argv)
 {
 	struct prog_args args = {.argc = argc, .argv = argv};
 	
-	rng_test();
+	//rng_test();
 	
 	rng_t r = rng_new(RNG_INIT(RNG_KIND_FRNG, frng = { { 1.0, 2.0 } }));
 	rng_test_spec(r);
 	rng_free(r);
 
 	if( argv[1] ) {
-		map_and_then(argv[1], &map_callback, &args);
+		//map_and_then(argv[1], &map_callback, &args);
+		return do_work((work_args_t) {
+				.op = OP_SHUFFLE_IP,
+				.data.op_shuffle_ip.file = argv[1],
+				});
 	}
 
 	return 0;

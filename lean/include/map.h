@@ -24,6 +24,7 @@ void* map_and_then(const char* file, map_cb callback, void* user);
 #ifdef __cplusplus
 }
 #include <panic.h>
+#include "reinterpret.h"
 #include <cstdint>
 namespace mm {
 	struct mmap {
@@ -51,6 +52,9 @@ namespace mm {
 				::unmap_and_close(inner);
 			}
 		}
+
+		inline const span<const unsigned char> as_span() const { return span(as_ptr(), size()); }
+		inline span<unsigned char> as_span() { return span(as_ptr(), size()); }
 
 		inline const std::uint8_t* as_ptr() const { return (const std::uint8_t*)inner.ptr; }
 		inline std::uint8_t* as_ptr() { return (std::uint8_t*)inner.ptr; }

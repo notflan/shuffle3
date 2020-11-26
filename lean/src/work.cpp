@@ -1,6 +1,42 @@
+#include <tuple>
+#include <functional>
+#include <cfloat>
+
+#include <fmt/format.h>
+
 #include <shuffle3.h>
-#include <work.h>
 #include <panic.h>
+#include <map.h>
+#include <reinterpret.h>
+#include <shuffle.hpp>
+
+#include <work.h>
+
+template<typename T, typename Fn>
+std::tuple<T, T> minmax_t(const span<T>& array, Fn keep)
+{
+	T lowest;
+	T highest;
+	for(std::size_t i=0;i<array.size();i++)
+	{
+		if(!keep(array[i])) continue;
+
+		if(!i) lowest = highest = array[i];
+		else {
+			auto item = array[i];
+			if(item < lowest) lowest = item;
+			if(item > highest) highest = item;
+		}
+	}
+	fmt::print("MMX {}, {}\n", lowest, highest);
+	return {lowest, highest};
+}
+
+template<typename T>
+inline std::tuple<T, T> minmax_t(const span<T>& array)
+{
+	return minmax_t(array, [](T _val) { return true; });
+}
 
 namespace work
 {
@@ -8,6 +44,35 @@ namespace work
 	template<bool unshuffle>
 	int xshuffle_ip(const char* file)
 	{
+		mm::mmap map(file);
+
+		if constexpr(unshuffle)
+		{
+			auto [byte_l, byte_h] = minmax_t(map.as_span().reinterpret<std::int8_t>());
+			rng::drng		drng((std::int32_t) ((0xfffa << 16) | (byte_l<<7) | byte_h ));
+			rng::unshuffle(drng,  map.as_span());
+
+			auto [float_l, float_h] = minmax_t(map.as_span().reinterpret<float>(), [](float f) -> bool { return !( (f!=f) || f < -FLT_MAX || f > FLT_MAX); });
+			rng::frng		frng(float_l, float_h);
+			rng::unshuffle(frng,  map.as_span().reinterpret<float>());
+
+			auto [long_l, long_h] = minmax_t(map.as_span().reinterpret<std::int64_t>());
+			rng::xoroshiro128plus	xorng(*(const std::uint64_t*)&long_l, *(const std::uint64_t*)&long_h);
+			rng::unshuffle(xorng, map.as_span().reinterpret<std::int64_t>());
+		} else {
+			auto [long_l, long_h] = minmax_t(map.as_span().reinterpret<std::int64_t>());
+			rng::xoroshiro128plus	xorng(*(const std::uint64_t*)&long_l, *(const std::uint64_t*)&long_h);
+			rng::shuffle(xorng, map.as_span().reinterpret<std::int64_t>());
+
+			auto [float_l, float_h] = minmax_t(map.as_span().reinterpret<float>(), [](float f) -> bool { return !( (f!=f) || f < -FLT_MAX || f > FLT_MAX); });
+			rng::frng		frng(float_l, float_h);
+			rng::shuffle(frng,  map.as_span().reinterpret<float>());
+			
+			auto [byte_l, byte_h] = minmax_t(map.as_span().reinterpret<std::int8_t>());
+			rng::drng		drng((std::int32_t) ((0xfffa << 16) | (byte_l<<7) | byte_h ));
+			rng::shuffle(drng,  map.as_span());
+		}
+
 		return 0;
 	}
 
@@ -15,6 +80,14 @@ namespace work
 	template<bool unshuffle>
 	int xshuffle_op(const char* ifile, const char* ofile, bool is_buffered)
 	{
+
+		if constexpr(unshuffle)
+		{
+
+		} else {
+
+		}
+		panic("Unimplemented");
 		return 0;
 	}
 
