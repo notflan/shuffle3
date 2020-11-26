@@ -29,6 +29,7 @@ static void unshuffle_file(const char* filename)
 	panic("unimplemented");
 }*/
 
+//XXX: Not using this anymore 
 static void* map_callback(mmap_t map, void* user)
 {
 	struct prog_args args = *(struct prog_args*)user;

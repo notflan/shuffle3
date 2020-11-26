@@ -17,6 +17,8 @@ typedef struct {
 
 		OP_UNSHUFFLE_IP, // Unshuffle in place
 		OP_UNSHUFFLE_OP, // Unshuffle out of place
+
+		OP_HELP, // Print help then exit
 	} op;
 	union {
 		struct {
@@ -41,7 +43,7 @@ typedef struct {
 	} data;
 } work_args_t;
 
-int do_work(work_args_t args);
+int do_work(const work_args_t args);
 
 #ifdef __cplusplus
 }
