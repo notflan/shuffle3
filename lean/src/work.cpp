@@ -28,7 +28,7 @@ std::tuple<T, T> minmax_t(const span<T>& array, Fn keep)
 			if(item > highest) highest = item;
 		}
 	}
-	fmt::print("MMX {}, {}\n", lowest, highest);
+	//fmt::print("MMX {}, {}\n", lowest, highest);
 	return {lowest, highest};
 }
 
