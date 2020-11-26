@@ -1,3 +1,5 @@
 * Todo
 - [X] impl rng
-- [ ] impl shuffling
+- [X] impl shuffling
+- [ ] impl out-of-place shuffling
+- [ ] arg parsing and dispatch
