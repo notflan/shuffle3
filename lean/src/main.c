@@ -9,6 +9,7 @@
 #include <reinterpret.h>
 #include <map.h>
 #include <rng.h>
+#include <work.h>
 
 _Static_assert(sizeof(float)==sizeof(uint32_t), "float is not 32 bits");
 
