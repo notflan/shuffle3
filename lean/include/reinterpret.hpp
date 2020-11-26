@@ -28,12 +28,12 @@ struct span {
 
 	inline const T& operator[](std::size_t i) const
 	{
-		if (i >= len) panic("Out of bounds access");
+		if (i >= len) panic("Out of bounds access: %lu >= %lu", i, len);
 		return ptr[i];
 	}
 	inline T& operator[](std::size_t i)
 	{
-		if(i >= len) panic("Out of bounds access");
+		if (i >= len) panic("Out of bounds access: %lu >= %lu", i, len);
 		return ptr[i];
 	}
 

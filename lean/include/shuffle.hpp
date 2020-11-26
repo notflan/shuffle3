@@ -9,6 +9,7 @@ namespace rng {
 	template<typename T, typename R>
 	inline void shuffle(R& rng, span<T> span)
 	{
+		if(!span.size()) return;
 		fmt::print(" -> shuffling {} objects...", span.size());
 		for(std::size_t i=span.size()-1;i>0;i--)
 		{
@@ -21,6 +22,7 @@ namespace rng {
 	template<typename T, typename R>
 	inline void unshuffle(R& rng, span<T> span)
 	{
+		if(!span.size()) return;
 		std::vector<std::size_t> rng_values;
 
 		fmt::print(" -> unshuffling {} objects...", span.size());

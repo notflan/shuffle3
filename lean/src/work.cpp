@@ -15,18 +15,16 @@
 template<typename T, typename Fn>
 std::tuple<T, T> minmax_t(const span<T>& array, Fn keep)
 {
-	T lowest;
 	T highest;
+	T lowest;
 	for(std::size_t i=0;i<array.size();i++)
 	{
 		if(!keep(array[i])) continue;
 
-		if(!i) lowest = highest = array[i];
-		else {
-			auto item = array[i];
-			if(item < lowest) lowest = item;
-			if(item > highest) highest = item;
-		}
+		auto item = array[i];
+		if(!i) lowest = highest = item;
+		else if(item < lowest) lowest = item;
+		else if(item > highest) highest = item;
 	}
 	//fmt::print("MMX {}, {}\n", lowest, highest);
 	return {lowest, highest};

@@ -1,3 +1,8 @@
+
+* Improvements
+  - *~70-80x* speedup from shuffle3 1.0
+  - Can properly handle large files without core dumping
+
 * Todo
 - [X] impl rng
 - [X] impl shuffling

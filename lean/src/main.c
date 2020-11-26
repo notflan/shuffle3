@@ -47,9 +47,9 @@ int main(int argc, char** argv)
 	
 	//rng_test();
 	
-	rng_t r = rng_new(RNG_INIT(RNG_KIND_FRNG, frng = { { 1.0, 2.0 } }));
-	rng_test_spec(r);
-	rng_free(r);
+	//rng_t r = rng_new(RNG_INIT(RNG_KIND_FRNG, frng = { { 1.0, 2.0 } }));
+	//rng_test_spec(r);
+	//rng_free(r);
 
 	if( argv[1] ) {
 		//map_and_then(argv[1], &map_callback, &args);
