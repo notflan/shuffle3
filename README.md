@@ -41,7 +41,8 @@ Whereas V2 uses a single `mmap()`.
 ## Memory usage
 The [memusage](https://www.systutorials.com/docs/linux/man/1-memusage/) graph for `v1` shows extremely inefficient stack usage.
 ![](./profiling/old-mem.png)
-( the green is supposed to be a line, not a bar )
+( the green is supposed to be a line, not a bar! )
+
 This is due to how the unshuffler buffers RNG results.
 
 `v1` naively used VLAs to store this buffer, which can baloon to 8 times the size of the file being unshuffled.
