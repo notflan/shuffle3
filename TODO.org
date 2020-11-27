@@ -27,7 +27,7 @@
   - Doesn't dump huge amounts of trash onto each stack frame
 
 ** Performance
-   ~[[https://github.com/sharkdp/hyperfine][hyperfine]]~ reports a *700-800%* speedup over =v1=.
+   [[https://github.com/sharkdp/hyperfine][hyperfine]]  reports a *700-800%* speedup over =v1=.
 
    It's easy to see why.
 *** V1 flamegraph
@@ -38,7 +38,7 @@
     [[./profiling/release-flame.svg]]
     
 ** Memory usage
-   The ~[[https://www.systutorials.com/docs/linux/man/1-memusage/][memusage]]~ graph for =v1= shows extremely inefficient stack usage.
+   The [[https://www.systutorials.com/docs/linux/man/1-memusage/][memusage]] graph for =v1= shows extremely inefficient stack usage.
    [[./profiling/old-mem.png]]
    ( the green is supposed to be a line, not a bar)
    This is due to how the unshuffler buffers RNG results.
