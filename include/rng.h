@@ -1,25 +1,59 @@
 #ifndef _RNG_H
 #define _RNG_H
 
-typedef struct rng_algo *RNG; //RNG algorithm reference
+#include "shuffle3.h"
 
-#define rng_reinterpret(rng, value, type) (*((type*)rng_next(rng, &value, sizeof(type))))
-#define rng_reinterpret_new(rng, value, type) (*((type*)rng_next(rng, malloc(sizeof(type)), sizeof(type))))
-#define rng_reinterpret_stackalloc(rng, value, type) rng_reinterpret(rng, alloca(sizeof(type)), type)
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-#define RNG_LEXBIND(rng, type, name) type name = rng_reinterpret(rng, name, type)
+enum rng_kind {
+	RNG_KIND_FRNG,
+	RNG_KIND_DRNG,
+	RNG_KIND_XORNG,
+};
 
-double rng_next_double(RNG algo);
-int rng_next_int_bounded(RNG algo, int min, int max);
-int rng_next_int(RNG algo, int max);
-void* rng_next(RNG algo, void* data, int len);
-int rng_chance(RNG algo, double d);
-void rng_free(RNG algo);
-void rng_seed(RNG algo, void* seed);
-RNG rng_new(RNG (*instantiate)(void));
+typedef struct rng_init
+{
+	enum rng_kind kind;
+	union {
+		struct {
+			double state[2];
+		} frng;
+		struct {
+			int32_t state;
+		} drng;
+		struct {
+			uint64_t state[2];
+		} xorng;	
+	} init;
 
-#define RNG_IMPL_DEFINITION(name) RNG __rng_impl_ ## name(void)
-#define RNG_ALGO(name) &__rng_impl_ ## name
-#define RNG_NEW(name) rng_new(RNG_ALGO(name))
+} rng_init_opt;
+
+typedef struct rng_impl* _UNIQUE rng_t;
+
+rng_t rng_new(rng_init_opt kind);
+#define RNG_INIT(_kind,...) ((rng_init_opt){.kind=(_kind), .init.__VA_ARGS__ })
+void  rng_free(rng_t ptr);
+
+// Tests
+extern void rng_test();
+extern void rng_test_spec(rng_t rng);
+
+#ifdef __cplusplus
+}
+// RNG interfaces
+#include <rng/frng.hpp>
+#include <rng/drng.hpp>
+#include <rng/xoroshiro128plus.hpp>
+
+namespace rng {
+	void test_algo(RNG&& rng);
+
+template<class R,
+	typename std::enable_if<std::is_base_of<RNG, R>::value>::value __fuck>
+		inline void test_algo(R&& rng) { test_algo(static_cast<RNG&&>(rng)); }
+}
+#endif
 
 #endif /* _RNG_H */
