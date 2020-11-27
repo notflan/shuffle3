@@ -11,6 +11,8 @@
 #include <rng.h>
 #include <work.h>
 
+#include <debug.h>
+
 #define noreturn __attribute__((noreturn)) void
 
 _Static_assert(sizeof(float)==sizeof(uint32_t), "float is not 32 bits");
@@ -41,6 +43,7 @@ int main(int argc, char** argv)
 
 	if( !argv[1] || *(argv[1]) != '-') help_then_exit(); 
 	
+	D_dprintf("Parsing `%c'", argv[1][1]);
 	switch(argv[1][1])
 	{
 		case 's': 
@@ -50,6 +53,7 @@ int main(int argc, char** argv)
 				fprintf(stderr, "Error: -s expected file argument.\n");
 				return 1;
 			}
+			D_dprintf("parsed.op = %d", OP_SHUFFLE_IP);
 			break;
 		case 'u':
 			parsed.op = OP_UNSHUFFLE_IP;
@@ -58,6 +62,7 @@ int main(int argc, char** argv)
 				fprintf(stderr, "Error: -u expected file argument.\n");
 				return 1;
 			}
+			D_dprintf("parsed.op = %d", OP_UNSHUFFLE_IP);
 			break;
 		case 'h':
 			usage();
@@ -65,6 +70,7 @@ int main(int argc, char** argv)
 		default:
 			fprintf(stderr, "Error: unknown argument `%s'\n\n", argv[1]);
 			help_then_exit();
+			panic("Unreachable");
 	}
 
 	return do_work(parsed);

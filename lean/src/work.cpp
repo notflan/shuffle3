@@ -11,6 +11,7 @@
 #include <shuffle.hpp>
 
 #include <work.h>
+#include <debug.h>
 
 template<typename T, typename Fn>
 std::tuple<T, T> minmax_t(const span<T>& array, Fn keep)
@@ -18,6 +19,7 @@ std::tuple<T, T> minmax_t(const span<T>& array, Fn keep)
 	T highest;
 	T lowest;
 	bool init=false;
+	D_dprintf("minmax_t: %p (%lu)", array.as_ptr(), array.size());
 	for(std::size_t i=0;i<array.size();i++)
 	{
 		if(!keep(array[i])) continue;
@@ -51,26 +53,32 @@ namespace work
 		if constexpr(unshuffle)
 		{
 			auto [byte_l, byte_h] = minmax_t(map.as_span().reinterpret<std::int8_t>());
+			D_dprintf("MMX res (s8): %d -- %d", byte_l, byte_h);
 			rng::drng		drng((std::int32_t) ((0xfffa << 16) | (byte_l<<7) | byte_h ));
 			rng::unshuffle(drng,  map.as_span());
 
 			auto [float_l, float_h] = minmax_t(map.as_span().reinterpret<float>(), [](float f) -> bool { return !( (f!=f) || f < -FLT_MAX || f > FLT_MAX); });
+			D_dprintf("MMX res (f32): %f -- %f", float_l, float_h);
 			rng::frng		frng(float_l, float_h);
 			rng::unshuffle(frng,  map.as_span().reinterpret<float>());
 
 			auto [long_l, long_h] = minmax_t(map.as_span().reinterpret<std::int64_t>());
+			D_dprintf("MMX res (u64): %ld -- %ld", long_l, long_h);
 			rng::xoroshiro128plus	xorng(*(const std::uint64_t*)&long_l, *(const std::uint64_t*)&long_h);
 			rng::unshuffle(xorng, map.as_span().reinterpret<std::int64_t>());
 		} else {
 			auto [long_l, long_h] = minmax_t(map.as_span().reinterpret<std::int64_t>());
+			D_dprintf("MMX res (u64): %ld -- %ld", long_l, long_h);
 			rng::xoroshiro128plus	xorng(*(const std::uint64_t*)&long_l, *(const std::uint64_t*)&long_h);
 			rng::shuffle(xorng, map.as_span().reinterpret<std::int64_t>());
 
 			auto [float_l, float_h] = minmax_t(map.as_span().reinterpret<float>(), [](float f) -> bool { return !( (f!=f) || f < -FLT_MAX || f > FLT_MAX); });
+			D_dprintf("MMX res (f32): %f -- %f", float_l, float_h);
 			rng::frng		frng(float_l, float_h);
 			rng::shuffle(frng,  map.as_span().reinterpret<float>());
 			
 			auto [byte_l, byte_h] = minmax_t(map.as_span().reinterpret<std::int8_t>());
+			D_dprintf("MMX res (s8): %d -- %d", byte_l, byte_h);
 			rng::drng		drng((std::int32_t) ((0xfffa << 16) | (byte_l<<7) | byte_h ));
 			rng::shuffle(drng,  map.as_span());
 		}

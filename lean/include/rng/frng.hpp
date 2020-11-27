@@ -2,6 +2,8 @@
 #include "impl.hpp"
 #include <cmath>
 
+#include <debug.h>
+
 namespace rng
 {
 	struct frng : public RNG 
@@ -27,11 +29,12 @@ namespace rng
 			return fract(sin(dot(state, vec2)) * 43758.5453);
 		}
 
-		inline constexpr frng(double s1, double s2) : state({s1, s2}){}
-		inline constexpr frng(const std::array<double, 2>& ar) : state(ar){}
-		inline constexpr frng(std::array<double, 2>&& ar) : state(ar){}
-		inline constexpr frng(const double (&ar)[2]) : state({ar[0], ar[1]}) {}
-
+#define P D_dprintf("frng: seeded with (%f, %f)", state[0], state[1]);
+		inline constexpr frng(double s1, double s2) : state({s1, s2}){P}
+		inline constexpr frng(const std::array<double, 2>& ar) : state(ar){P}
+		inline constexpr frng(std::array<double, 2>&& ar) : state(ar){P}
+		inline constexpr frng(const double (&ar)[2]) : state({ar[0], ar[1]}) {P}
+#undef P
 		inline constexpr double next_double() override { return sample(); }
 		inline constexpr float next_float() override { return (float)sample(); }
 	protected: 
@@ -60,3 +63,4 @@ namespace rng
 		}
 	}; 
 }
+
