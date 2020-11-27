@@ -17,12 +17,16 @@ std::tuple<T, T> minmax_t(const span<T>& array, Fn keep)
 {
 	T highest;
 	T lowest;
+	bool init=false;
 	for(std::size_t i=0;i<array.size();i++)
 	{
 		if(!keep(array[i])) continue;
 
 		auto item = array[i];
-		if(!i) lowest = highest = item;
+		if(!init) {
+			init = true;
+			lowest = highest = item;
+		}
 		else if(item < lowest) lowest = item;
 		else if(item > highest) highest = item;
 	}

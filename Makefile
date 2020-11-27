@@ -16,6 +16,8 @@ RELEASE_LDFLAGS?= -O3 -flto
 DEBUG_CFLAGS?= -g -O0
 DEBUG_LDFLAGS?= -O0
 
+STRIP=strip
+
 OBJ = $(addprefix obj/,$(SRC:.c=.o))
 
 .PHONY: release
@@ -35,7 +37,7 @@ $(BUILD)/$(PROJECT)-release: CFLAGS+= $(RELEASE_CFLAGS)
 $(BUILD)/$(PROJECT)-release: LDFLAGS+= $(RELEASE_LDFLAGS)
 $(BUILD)/$(PROJECT)-release: $(OBJ)
 	$(CC) $^ $(CFLAGS) -o $@ $(LDFLAGS)
-	strip $@
+	$(STRIP) $@
 
 $(BUILD)/$(PROJECT)-debug: CFLAGS+= $(DEBUG_CFLAGS)
 $(BUILD)/$(PROJECT)-debug: LDFLAGS+= $(DEBUG_LDFLAGS)

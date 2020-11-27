@@ -23,7 +23,7 @@ namespace rng {
 	inline void unshuffle(R& rng, span<T> span)
 	{
 		if(!span.size()) return;
-		std::vector<std::size_t> rng_values;
+		std::vector<std::size_t> rng_values(span.size());
 
 		fmt::print(" -> unshuffling {} objects...", span.size());
 		for(std::size_t i=span.size()-1;i>0;i--)

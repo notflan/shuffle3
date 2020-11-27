@@ -16,7 +16,9 @@ CXX_OPT_FLAGS?= $(OPT_FLAGS) -felide-constructors
 
 CFLAGS   += $(COMMON_FLAGS) --std=gnu11
 CXXFLAGS += $(COMMON_FLAGS) --std=gnu++20 -fno-exceptions
-LDFLAGS  += -lfmt 
+LDFLAGS  += -lfmt
+
+STRIP=strip
 
 RELEASE_CFLAGS?=   -O3 -flto $(OPT_FLAGS)
 RELEASE_CXXFLAGS?= -O3 -flto $(CXX_OPT_FLAGS)
@@ -58,7 +60,7 @@ $(PROJECT)-release: CXXFLAGS += $(RELEASE_CXXFLAGS)
 $(PROJECT)-release: LDFLAGS += $(RELEASE_LDFLAGS)
 $(PROJECT)-release: $(OBJ)
 	$(CXX) $^ $(CXXFLAGS) -o $@ $(LDFLAGS)
-	strip $@
+	$(STRIP) $@
 
 $(PROJECT)-debug: CFLAGS+= $(DEBUG_CFLAGS)
 $(PROJECT)-debug: CXXFLAGS += $(DEBUG_CXXFLAGS)
