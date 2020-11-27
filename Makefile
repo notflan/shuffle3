@@ -42,6 +42,9 @@ release: | dirs $(PROJECT)-release
 .PHONY: debug
 debug: | dirs $(PROJECT)-debug
 
+.PHONY: test
+test: test-all
+
 # Targets
 
 dirs:
@@ -71,3 +74,7 @@ $(PROJECT)-debug: $(OBJ)
 clean:
 	rm -rf obj
 	rm -f $(PROJECT)-{release,debug}
+
+test-all:
+	@./test.sh ./$(PROJECT)-debug ./$(PROJECT)-release
+
