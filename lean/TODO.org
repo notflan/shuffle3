@@ -1,10 +1,35 @@
+* shuffle3-lean
+  Redegisn/upgrade of =shuffle3=
+
+* Goals
+  - [X] Functioning in-place shuffle/unshuffle
+    - [X] Shuffle
+    - [X] Unshuffle
+  - [X] Usable in-place s/us from command line
+    - [X] Shuffle
+    - [X] Unshuffle
+  - [ ] Functioning out-of-place/in-memory shuffle/unshuffle
+    - [ ] Shuffle
+    - [ ] Unshuffle
+  - [ ] Usable out-of-place s/us from command line
+    - [ ] Shuffle
+    - [ ] Unshuffle
+
+** NO compatibility with =shuffle3=
+   =shuffle3='s ~drng~ PRNG algorithm uses an outdated global state backend. We don't want to reuse this.
+   As a result, output from =shuffle3= and =shuffle3-lean= is different.
 
 * Improvements
   - *~70-80x* speedup from shuffle3 1.0
+  - Huge reduction in syscalls
+  - Takes advantage of the kernel's fs cache
   - Can properly handle large files without core dumping
+  - Doesn't dump huge amounts of trash onto each stack frame
 
 * Todo
-- [X] impl rng
-- [X] impl shuffling
-- [ ] impl out-of-place shuffling
-- [ ] arg parsing and dispatch
+  - [X] impl rng
+  - [X] impl shuffling
+  - [ ] impl out-of-place shuffling
+  - [-] arg parsing and dispatch
+    - [X] simple parsing
+    - [ ] complex parsing
