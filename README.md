@@ -27,19 +27,19 @@ Run with `-h` for more options.
 * Doesn't dump huge amounts of trash onto each stack frame
 
 ## Performance
-[https://github.com/sharkdp/hyperfine](hyperfine) reports a **700-800%** speedup over `v1`.
+[hyperfine](https://github.com/sharkdp/hyperfine) reports a **700-800%** speedup over `v1`.
 It's easy to see why.
 
 ### V1 flamegraph
 V1 uses a pesudo-array adaptor to perform filesystem reads, seeks, and writes. This causes a massive syscall overhead.
-![](./profiling/release-flame-old.svg)
+![](./profiling/release-flame-old.png)
 
 ### V2 flamegraph
 Whereas V2 uses a single `mmap()`.
-![](./profiling/release-flame.svg)
+![](./profiling/release-flame.png)
 
 ## Memory usage
-The [https://www.systutorials.com/docs/linux/man/1-memusage/](memusage) graph for =v1= shows extremely inefficient stack usage.
+The [memusage](https://www.systutorials.com/docs/linux/man/1-memusage/) graph for =v1= shows extremely inefficient stack usage.
 ![](./profiling/old-mem.png)
 ( the green is supposed to be a line, not a bar )
 This is due to how the unshuffler buffers RNG results.
