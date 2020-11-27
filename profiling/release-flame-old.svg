@@ -1,0 +1,419 @@
+<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg version="1.1" width="1200" height="310" onload="init(evt)" viewBox="0 0 1200 310" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><!--Flame graph stack visualization. See https://github.com/brendangregg/FlameGraph for latest version, and http://www.brendangregg.com/flamegraphs.html for examples.--><!--NOTES: --><defs><linearGradient id="background" y1="0" y2="1" x1="0" x2="0"><stop stop-color="#eeeeee" offset="5%"/><stop stop-color="#eeeeb0" offset="95%"/></linearGradient></defs><style type="text/css">
+text { font-family:"Verdana"; font-size:12px; fill:rgb(0,0,0); }
+#title { text-anchor:middle; font-size:17px; }
+#search { opacity:0.1; cursor:pointer; }
+#search:hover, #search.show { opacity:1; }
+#subtitle { text-anchor:middle; font-color:rgb(160,160,160); }
+#unzoom { cursor:pointer; }
+#frames > *:hover { stroke:black; stroke-width:0.5; cursor:pointer; }
+.hide { display:none; }
+.parent { opacity:0.5; }
+</style><script type="text/ecmascript"><![CDATA[var nametype = 'Function:';
+var fontsize = 12;
+var fontwidth = 0.59;
+var xpad = 10;
+var inverted = false;
+var searchcolor = 'rgb(230,0,230)';
+var fluiddrawing = true;
+var truncate_text_right = false;]]><![CDATA["use strict";
+var details, searchbtn, unzoombtn, matchedtxt, svg, searching, frames;
+function init(evt) {
+    details = document.getElementById("details").firstChild;
+    searchbtn = document.getElementById("search");
+    unzoombtn = document.getElementById("unzoom");
+    matchedtxt = document.getElementById("matched");
+    svg = document.getElementsByTagName("svg")[0];
+    frames = document.getElementById("frames");
+    searching = 0;
+
+    // Use GET parameters to restore a flamegraph's state.
+    var restore_state = function() {
+        var params = get_params();
+        if (params.x && params.y)
+            zoom(find_group(document.querySelector('[x="' + params.x + '"][y="' + params.y + '"]')));
+        if (params.s)
+            search(params.s);
+    };
+
+    if (fluiddrawing) {
+        // Make width dynamic so the SVG fits its parent's width.
+        svg.removeAttribute("width");
+        // Edge requires us to have a viewBox that gets updated with size changes.
+        var isEdge = /Edge\/\d./i.test(navigator.userAgent);
+        if (!isEdge) {
+          svg.removeAttribute("viewBox");
+        }
+        var update_for_width_change = function() {
+            if (isEdge) {
+                svg.attributes.viewBox.value = "0 0 " + svg.width.baseVal.value + " " + svg.height.baseVal.value;
+            }
+
+            // Keep consistent padding on left and right of frames container.
+            frames.attributes.width.value = svg.width.baseVal.value - xpad * 2;
+
+            // Text truncation needs to be adjusted for the current width.
+            var el = frames.children;
+            for(var i = 0; i < el.length; i++) {
+                update_text(el[i]);
+            }
+
+            // Keep search elements at a fixed distance from right edge.
+            var svgWidth = svg.width.baseVal.value;
+            searchbtn.attributes.x.value = svgWidth - xpad - 100;
+            matchedtxt.attributes.x.value = svgWidth - xpad - 100;
+        };
+        window.addEventListener('resize', function() {
+            update_for_width_change();
+        });
+        // This needs to be done asynchronously for Safari to work.
+        setTimeout(function() {
+            unzoom();
+            update_for_width_change();
+            restore_state();
+        }, 0);
+    } else {
+        restore_state();
+    }
+}
+// event listeners
+window.addEventListener("click", function(e) {
+    var target = find_group(e.target);
+    if (target) {
+        if (target.nodeName == "a") {
+            if (e.ctrlKey === false) return;
+            e.preventDefault();
+        }
+        if (target.classList.contains("parent")) unzoom();
+        zoom(target);
+
+        // set parameters for zoom state
+        var el = target.querySelector("rect");
+        if (el && el.attributes && el.attributes.y && el.attributes._orig_x) {
+            var params = get_params()
+            params.x = el.attributes._orig_x.value;
+            params.y = el.attributes.y.value;
+            history.replaceState(null, null, parse_params(params));
+        }
+    }
+    else if (e.target.id == "unzoom") {
+        unzoom();
+
+        // remove zoom state
+        var params = get_params();
+        if (params.x) delete params.x;
+        if (params.y) delete params.y;
+        history.replaceState(null, null, parse_params(params));
+    }
+    else if (e.target.id == "search") search_prompt();
+}, false)
+// mouse-over for info
+// show
+window.addEventListener("mouseover", function(e) {
+    var target = find_group(e.target);
+    if (target) details.nodeValue = nametype + " " + g_to_text(target);
+}, false)
+// clear
+window.addEventListener("mouseout", function(e) {
+    var target = find_group(e.target);
+    if (target) details.nodeValue = ' ';
+}, false)
+// ctrl-F for search
+window.addEventListener("keydown",function (e) {
+    if (e.keyCode === 114 || (e.ctrlKey && e.keyCode === 70)) {
+        e.preventDefault();
+        search_prompt();
+    }
+}, false)
+// functions
+function get_params() {
+    var params = {};
+    var paramsarr = window.location.search.substr(1).split('&');
+    for (var i = 0; i < paramsarr.length; ++i) {
+        var tmp = paramsarr[i].split("=");
+        if (!tmp[0] || !tmp[1]) continue;
+        params[tmp[0]]  = decodeURIComponent(tmp[1]);
+    }
+    return params;
+}
+function parse_params(params) {
+    var uri = "?";
+    for (var key in params) {
+        uri += key + '=' + encodeURIComponent(params[key]) + '&';
+    }
+    if (uri.slice(-1) == "&")
+        uri = uri.substring(0, uri.length - 1);
+    if (uri == '?')
+        uri = window.location.href.split('?')[0];
+    return uri;
+}
+function find_child(node, selector) {
+    var children = node.querySelectorAll(selector);
+    if (children.length) return children[0];
+    return;
+}
+function find_group(node) {
+    var parent = node.parentElement;
+    if (!parent) return;
+    if (parent.id == "frames") return node;
+    return find_group(parent);
+}
+function orig_save(e, attr, val) {
+    if (e.attributes["_orig_" + attr] != undefined) return;
+    if (e.attributes[attr] == undefined) return;
+    if (val == undefined) val = e.attributes[attr].value;
+    e.setAttribute("_orig_" + attr, val);
+}
+function orig_load(e, attr) {
+    if (e.attributes["_orig_"+attr] == undefined) return;
+    e.attributes[attr].value = e.attributes["_orig_" + attr].value;
+    e.removeAttribute("_orig_" + attr);
+}
+function g_to_text(e) {
+    var text = find_child(e, "title").firstChild.nodeValue;
+    return (text)
+}
+function g_to_func(e) {
+    var func = g_to_text(e);
+    // if there's any manipulation we want to do to the function
+    // name before it's searched, do it here before returning.
+    return (func);
+}
+function update_text(e) {
+    var r = find_child(e, "rect");
+    var t = find_child(e, "text");
+    var w = parseFloat(r.attributes.width.value) * frames.attributes.width.value / 100 - 3;
+    var txt = find_child(e, "title").textContent.replace(/\([^(]*\)$/,"");
+    t.attributes.x.value = format_percent((parseFloat(r.attributes.x.value) + (100 * 3 / frames.attributes.width.value)));
+    // Smaller than this size won't fit anything
+    if (w < 2 * fontsize * fontwidth) {
+        t.textContent = "";
+        return;
+    }
+    t.textContent = txt;
+    // Fit in full text width
+    if (/^ *\$/.test(txt) || t.getComputedTextLength() < w)
+        return;
+    if (truncate_text_right) {
+        // Truncate the right side of the text.
+        for (var x = txt.length - 2; x > 0; x--) {
+            if (t.getSubStringLength(0, x + 2) <= w) {
+                t.textContent = txt.substring(0, x) + "..";
+                return;
+            }
+        }
+    } else {
+        // Truncate the left side of the text.
+        for (var x = 2; x < txt.length; x++) {
+            if (t.getSubStringLength(x - 2, txt.length) <= w) {
+                t.textContent = ".." + txt.substring(x, txt.length);
+                return;
+            }
+        }
+    }
+    t.textContent = "";
+}
+// zoom
+function zoom_reset(e) {
+    if (e.attributes != undefined) {
+        orig_load(e, "x");
+        orig_load(e, "width");
+    }
+    if (e.childNodes == undefined) return;
+    for(var i = 0, c = e.childNodes; i < c.length; i++) {
+        zoom_reset(c[i]);
+    }
+}
+function zoom_child(e, x, ratio) {
+    if (e.attributes != undefined) {
+        if (e.attributes.x != undefined) {
+            orig_save(e, "x");
+            e.attributes.x.value = format_percent((parseFloat(e.attributes.x.value) - x) * ratio);
+            if (e.tagName == "text") {
+                e.attributes.x.value = format_percent(parseFloat(find_child(e.parentNode, "rect[x]").attributes.x.value) + (100 * 3 / frames.attributes.width.value));
+            }
+        }
+        if (e.attributes.width != undefined) {
+            orig_save(e, "width");
+            e.attributes.width.value = format_percent(parseFloat(e.attributes.width.value) * ratio);
+        }
+    }
+    if (e.childNodes == undefined) return;
+    for(var i = 0, c = e.childNodes; i < c.length; i++) {
+        zoom_child(c[i], x, ratio);
+    }
+}
+function zoom_parent(e) {
+    if (e.attributes) {
+        if (e.attributes.x != undefined) {
+            orig_save(e, "x");
+            e.attributes.x.value = "0.0%";
+        }
+        if (e.attributes.width != undefined) {
+            orig_save(e, "width");
+            e.attributes.width.value = "100.0%";
+        }
+    }
+    if (e.childNodes == undefined) return;
+    for(var i = 0, c = e.childNodes; i < c.length; i++) {
+        zoom_parent(c[i]);
+    }
+}
+function zoom(node) {
+    var attr = find_child(node, "rect").attributes;
+    var width = parseFloat(attr.width.value);
+    var xmin = parseFloat(attr.x.value);
+    var xmax = xmin + width;
+    var ymin = parseFloat(attr.y.value);
+    var ratio = 100 / width;
+    // XXX: Workaround for JavaScript float issues (fix me)
+    var fudge = 0.001;
+    unzoombtn.classList.remove("hide");
+    var el = frames.children;
+    for (var i = 0; i < el.length; i++) {
+        var e = el[i];
+        var a = find_child(e, "rect").attributes;
+        var ex = parseFloat(a.x.value);
+        var ew = parseFloat(a.width.value);
+        // Is it an ancestor
+        if (!inverted) {
+            var upstack = parseFloat(a.y.value) > ymin;
+        } else {
+            var upstack = parseFloat(a.y.value) < ymin;
+        }
+        if (upstack) {
+            // Direct ancestor
+            if (ex <= xmin && (ex+ew+fudge) >= xmax) {
+                e.classList.add("parent");
+                zoom_parent(e);
+                update_text(e);
+            }
+            // not in current path
+            else
+                e.classList.add("hide");
+        }
+        // Children maybe
+        else {
+            // no common path
+            if (ex < xmin || ex + fudge >= xmax) {
+                e.classList.add("hide");
+            }
+            else {
+                zoom_child(e, xmin, ratio);
+                update_text(e);
+            }
+        }
+    }
+}
+function unzoom() {
+    unzoombtn.classList.add("hide");
+    var el = frames.children;
+    for(var i = 0; i < el.length; i++) {
+        el[i].classList.remove("parent");
+        el[i].classList.remove("hide");
+        zoom_reset(el[i]);
+        update_text(el[i]);
+    }
+}
+// search
+function reset_search() {
+    var el = document.querySelectorAll("#frames rect");
+    for (var i = 0; i < el.length; i++) {
+        orig_load(el[i], "fill")
+    }
+    var params = get_params();
+    delete params.s;
+    history.replaceState(null, null, parse_params(params));
+}
+function search_prompt() {
+    if (!searching) {
+        var term = prompt("Enter a search term (regexp " +
+            "allowed, eg: ^ext4_)", "");
+        if (term != null) {
+            search(term)
+        }
+    } else {
+        reset_search();
+        searching = 0;
+        searchbtn.classList.remove("show");
+        searchbtn.firstChild.nodeValue = "Search"
+        matchedtxt.classList.add("hide");
+        matchedtxt.firstChild.nodeValue = ""
+    }
+}
+function search(term) {
+    var re = new RegExp(term);
+    var el = frames.children;
+    var matches = new Object();
+    var maxwidth = 0;
+    for (var i = 0; i < el.length; i++) {
+        var e = el[i];
+        var func = g_to_func(e);
+        var rect = find_child(e, "rect");
+        if (func == null || rect == null)
+            continue;
+        // Save max width. Only works as we have a root frame
+        var w = parseFloat(rect.attributes.width.value);
+        if (w > maxwidth)
+            maxwidth = w;
+        if (func.match(re)) {
+            // highlight
+            var x = parseFloat(rect.attributes.x.value);
+            orig_save(rect, "fill");
+            rect.attributes.fill.value = searchcolor;
+            // remember matches
+            if (matches[x] == undefined) {
+                matches[x] = w;
+            } else {
+                if (w > matches[x]) {
+                    // overwrite with parent
+                    matches[x] = w;
+                }
+            }
+            searching = 1;
+        }
+    }
+    if (!searching)
+        return;
+    var params = get_params();
+    params.s = term;
+    history.replaceState(null, null, parse_params(params));
+
+    searchbtn.classList.add("show");
+    searchbtn.firstChild.nodeValue = "Reset Search";
+    // calculate percent matched, excluding vertical overlap
+    var count = 0;
+    var lastx = -1;
+    var lastw = 0;
+    var keys = Array();
+    for (k in matches) {
+        if (matches.hasOwnProperty(k))
+            keys.push(k);
+    }
+    // sort the matched frames by their x location
+    // ascending, then width descending
+    keys.sort(function(a, b){
+        return a - b;
+    });
+    // Step through frames saving only the biggest bottom-up frames
+    // thanks to the sort order. This relies on the tree property
+    // where children are always smaller than their parents.
+    var fudge = 0.0001;    // JavaScript floating point
+    for (var k in keys) {
+        var x = parseFloat(keys[k]);
+        var w = matches[keys[k]];
+        if (x >= lastx + lastw - fudge) {
+            count += w;
+            lastx = x;
+            lastw = w;
+        }
+    }
+    // display matched percent
+    matchedtxt.classList.remove("hide");
+    var pct = 100 * count / maxwidth;
+    if (pct != 100) pct = pct.toFixed(1);
+    matchedtxt.firstChild.nodeValue = "Matched: " + pct + "%";
+}
+function format_percent(n) {
+    return n.toFixed(4) + "%";
+}
+]]></script><rect x="0" y="0" width="100%" height="310" fill="url(#background)"/><text id="title" x="50.0000%" y="24.00">Flame Graph</text><text id="details" x="10" y="293.00"> </text><text id="unzoom" class="hide" x="10" y="24.00">Reset Zoom</text><text id="search" x="1090" y="24.00">Search</text><text id="matched" x="1090" y="293.00"> </text><svg id="frames" x="10" width="1180"><g><title>_IO_file_xsgetn (20 samples, 0.22%)</title><rect x="0.0000%" y="213" width="0.2179%" height="15" fill="rgb(227,0,7)"/><text x="0.2500%" y="223.50"></text></g><g><title>_IO_new_file_xsputn (12 samples, 0.13%)</title><rect x="0.3595%" y="213" width="0.1307%" height="15" fill="rgb(217,0,24)"/><text x="0.6095%" y="223.50"></text></g><g><title>__GI__IO_file_seekoff (156 samples, 1.70%)</title><rect x="0.5229%" y="213" width="1.6995%" height="15" fill="rgb(221,193,54)"/><text x="0.7729%" y="223.50"></text></g><g><title>__GI__IO_fread (37 samples, 0.40%)</title><rect x="2.2225%" y="213" width="0.4031%" height="15" fill="rgb(248,212,6)"/><text x="2.4725%" y="223.50"></text></g><g><title>__GI__IO_free_backup_area (25 samples, 0.27%)</title><rect x="2.6256%" y="213" width="0.2724%" height="15" fill="rgb(208,68,35)"/><text x="2.8756%" y="223.50"></text></g><g><title>__GI__IO_fwrite (66 samples, 0.72%)</title><rect x="2.8979%" y="213" width="0.7190%" height="15" fill="rgb(232,128,0)"/><text x="3.1479%" y="223.50"></text></g><g><title>__GI__IO_sgetn (30 samples, 0.33%)</title><rect x="3.6170%" y="213" width="0.3268%" height="15" fill="rgb(207,160,47)"/><text x="3.8670%" y="223.50"></text></g><g><title>__GI__IO_switch_to_get_mode (21 samples, 0.23%)</title><rect x="3.9438%" y="213" width="0.2288%" height="15" fill="rgb(228,23,34)"/><text x="4.1938%" y="223.50"></text></g><g><title>__GI___libc_free (24 samples, 0.26%)</title><rect x="4.1726%" y="213" width="0.2615%" height="15" fill="rgb(218,30,26)"/><text x="4.4226%" y="223.50"></text></g><g><title>__GI___libc_malloc (11 samples, 0.12%)</title><rect x="4.4340%" y="213" width="0.1198%" height="15" fill="rgb(220,122,19)"/><text x="4.6840%" y="223.50"></text></g><g><title>__GI_fseek (34 samples, 0.37%)</title><rect x="4.5539%" y="213" width="0.3704%" height="15" fill="rgb(250,228,42)"/><text x="4.8039%" y="223.50"></text></g><g><title>__lseek64 (74 samples, 0.81%)</title><rect x="4.9243%" y="213" width="0.8062%" height="15" fill="rgb(240,193,28)"/><text x="5.1743%" y="223.50"></text></g><g><title>_ar_file_get (16 samples, 0.17%)</title><rect x="5.7849%" y="213" width="0.1743%" height="15" fill="rgb(216,20,37)"/><text x="6.0349%" y="223.50"></text></g><g><title>_ar_file_set (21 samples, 0.23%)</title><rect x="5.9593%" y="213" width="0.2288%" height="15" fill="rgb(206,188,39)"/><text x="6.2093%" y="223.50"></text></g><g><title>_int_free (46 samples, 0.50%)</title><rect x="6.1880%" y="213" width="0.5011%" height="15" fill="rgb(217,207,13)"/><text x="6.4380%" y="223.50"></text></g><g><title>new_do_write (29 samples, 0.32%)</title><rect x="6.7545%" y="213" width="0.3159%" height="15" fill="rgb(231,73,38)"/><text x="7.0045%" y="223.50"></text></g><g><title>[[heap]] (651 samples, 7.09%)</title><rect x="0.0000%" y="229" width="7.0923%" height="15" fill="rgb(225,20,46)"/><text x="0.2500%" y="239.50">[[heap]]</text></g><g><title>_ar_file_get (12 samples, 0.13%)</title><rect x="7.2230%" y="213" width="0.1307%" height="15" fill="rgb(210,31,41)"/><text x="7.4730%" y="223.50"></text></g><g><title>_ar_file_set (19 samples, 0.21%)</title><rect x="7.3537%" y="213" width="0.2070%" height="15" fill="rgb(221,200,47)"/><text x="7.6037%" y="223.50"></text></g><g><title>[[stack]] (70 samples, 0.76%)</title><rect x="7.0923%" y="229" width="0.7626%" height="15" fill="rgb(226,26,5)"/><text x="7.3423%" y="239.50"></text></g><g><title>shuffle3 (27 samples, 0.29%)</title><rect x="7.5607%" y="213" width="0.2941%" height="15" fill="rgb(249,33,26)"/><text x="7.8107%" y="223.50"></text></g><g><title>_IO_file_xsgetn (42 samples, 0.46%)</title><rect x="7.8549%" y="213" width="0.4576%" height="15" fill="rgb(235,183,28)"/><text x="8.1049%" y="223.50"></text></g><g><title>_IO_seekoff_unlocked (20 samples, 0.22%)</title><rect x="8.3125%" y="213" width="0.2179%" height="15" fill="rgb(221,5,38)"/><text x="8.5625%" y="223.50"></text></g><g><title>[anon] (70 samples, 0.76%)</title><rect x="7.8549%" y="229" width="0.7626%" height="15" fill="rgb(247,18,42)"/><text x="8.1049%" y="239.50"></text></g><g><title>_IO_new_file_xsputn (45 samples, 0.49%)</title><rect x="8.6175%" y="213" width="0.4902%" height="15" fill="rgb(241,131,45)"/><text x="8.8675%" y="223.50"></text></g><g><title>[libc-2.32.so] (91 samples, 0.99%)</title><rect x="8.6175%" y="229" width="0.9914%" height="15" fill="rgb(249,31,29)"/><text x="8.8675%" y="239.50"></text></g><g><title>__GI__IO_file_seekoff (38 samples, 0.41%)</title><rect x="9.1949%" y="213" width="0.4140%" height="15" fill="rgb(225,111,53)"/><text x="9.4449%" y="223.50"></text></g><g><title>_IO_new_file_write (33 samples, 0.36%)</title><rect x="9.6852%" y="213" width="0.3595%" height="15" fill="rgb(238,160,17)"/><text x="9.9352%" y="223.50"></text></g><g><title>_IO_seekoff_unlocked (12 samples, 0.13%)</title><rect x="10.0447%" y="213" width="0.1307%" height="15" fill="rgb(214,148,48)"/><text x="10.2947%" y="223.50"></text></g><g><title>__GI__IO_default_xsputn (28 samples, 0.31%)</title><rect x="10.1754%" y="213" width="0.3050%" height="15" fill="rgb(232,36,49)"/><text x="10.4254%" y="223.50"></text></g><g><title>__GI__IO_file_overflow (33 samples, 0.36%)</title><rect x="10.4804%" y="213" width="0.3595%" height="15" fill="rgb(209,103,24)"/><text x="10.7304%" y="223.50"></text></g><g><title>__GI__IO_free_backup_area (12 samples, 0.13%)</title><rect x="10.9271%" y="213" width="0.1307%" height="15" fill="rgb(229,88,8)"/><text x="11.1771%" y="223.50"></text></g><g><title>__GI__IO_switch_to_get_mode (16 samples, 0.17%)</title><rect x="11.0796%" y="213" width="0.1743%" height="15" fill="rgb(213,181,19)"/><text x="11.3296%" y="223.50"></text></g><g><title>__GI___libc_malloc (14 samples, 0.15%)</title><rect x="11.2757%" y="213" width="0.1525%" height="15" fill="rgb(254,191,54)"/><text x="11.5257%" y="223.50"></text></g><g><title>__GI___libc_write (72 samples, 0.78%)</title><rect x="11.4283%" y="213" width="0.7844%" height="15" fill="rgb(241,83,37)"/><text x="11.6783%" y="223.50"></text></g><g><title>__GI___read (149 samples, 1.62%)</title><rect x="12.2127%" y="213" width="1.6233%" height="15" fill="rgb(233,36,39)"/><text x="12.4627%" y="223.50"></text></g><g><title>__GI_fseek (64 samples, 0.70%)</title><rect x="13.8359%" y="213" width="0.6972%" height="15" fill="rgb(226,3,54)"/><text x="14.0859%" y="223.50"></text></g><g><title>__lseek64 (151 samples, 1.65%)</title><rect x="14.5332%" y="213" width="1.6451%" height="15" fill="rgb(245,192,40)"/><text x="14.7832%" y="223.50"></text></g><g><title>__random (10 samples, 0.11%)</title><rect x="16.1782%" y="213" width="0.1089%" height="15" fill="rgb(238,167,29)"/><text x="16.4282%" y="223.50"></text></g><g><title>_ar_file_get (25 samples, 0.27%)</title><rect x="16.2872%" y="213" width="0.2724%" height="15" fill="rgb(232,182,51)"/><text x="16.5372%" y="223.50"></text></g><g><title>_ar_file_set (12 samples, 0.13%)</title><rect x="16.5595%" y="213" width="0.1307%" height="15" fill="rgb(231,60,39)"/><text x="16.8095%" y="223.50"></text></g><g><title>new_do_write (151 samples, 1.65%)</title><rect x="16.7883%" y="213" width="1.6451%" height="15" fill="rgb(208,69,12)"/><text x="17.0383%" y="223.50"></text></g><g><title>[unknown] (811 samples, 8.84%)</title><rect x="9.6089%" y="229" width="8.8354%" height="15" fill="rgb(235,93,37)"/><text x="9.8589%" y="239.50">[unknown]</text></g><g><title>_IO_seekoff_unlocked (12 samples, 0.13%)</title><rect x="18.4770%" y="229" width="0.1307%" height="15" fill="rgb(213,116,39)"/><text x="18.7270%" y="239.50"></text></g><g><title>__GI__IO_file_seekoff (19 samples, 0.21%)</title><rect x="18.6077%" y="229" width="0.2070%" height="15" fill="rgb(222,207,29)"/><text x="18.8577%" y="239.50"></text></g><g><title>rand (86 samples, 0.94%)</title><rect x="20.5796%" y="149" width="0.9369%" height="15" fill="rgb(206,96,30)"/><text x="20.8296%" y="159.50"></text></g><g><title>__random (85 samples, 0.93%)</title><rect x="20.5905%" y="133" width="0.9260%" height="15" fill="rgb(218,138,4)"/><text x="20.8405%" y="143.50"></text></g><g><title>__random_r (62 samples, 0.68%)</title><rect x="20.8411%" y="117" width="0.6755%" height="15" fill="rgb(250,191,14)"/><text x="21.0911%" y="127.50"></text></g><g><title>_next (160 samples, 1.74%)</title><rect x="19.8170%" y="165" width="1.7431%" height="15" fill="rgb(239,60,40)"/><text x="20.0670%" y="175.50"></text></g><g><title>_sample (20 samples, 0.22%)</title><rect x="21.5601%" y="165" width="0.2179%" height="15" fill="rgb(206,27,48)"/><text x="21.8101%" y="175.50"></text></g><g><title>[libm-2.32.so] (202 samples, 2.20%)</title><rect x="22.3445%" y="149" width="2.2007%" height="15" fill="rgb(225,35,8)"/><text x="22.5945%" y="159.50">[..</text></g><g><title>_sample.lto_priv.0 (259 samples, 2.82%)</title><rect x="21.7780%" y="165" width="2.8217%" height="15" fill="rgb(250,213,24)"/><text x="22.0280%" y="175.50">_s..</text></g><g><title>__GI__IO_default_xsputn (125 samples, 1.36%)</title><rect x="31.2779%" y="117" width="1.3618%" height="15" fill="rgb(247,123,22)"/><text x="31.5279%" y="127.50"></text></g><g><title>__GI__IO_fwrite (752 samples, 8.19%)</title><rect x="25.2860%" y="149" width="8.1926%" height="15" fill="rgb(231,138,38)"/><text x="25.5360%" y="159.50">__GI__IO_fw..</text></g><g><title>_IO_new_file_xsputn (572 samples, 6.23%)</title><rect x="27.2470%" y="133" width="6.2316%" height="15" fill="rgb(231,145,46)"/><text x="27.4970%" y="143.50">_IO_new_..</text></g><g><title>__GI__IO_file_overflow (77 samples, 0.84%)</title><rect x="32.6397%" y="117" width="0.8389%" height="15" fill="rgb(251,118,11)"/><text x="32.8897%" y="127.50"></text></g><g><title>__memmove_avx_unaligned_erms (20 samples, 0.22%)</title><rect x="33.4786%" y="149" width="0.2179%" height="15" fill="rgb(217,147,25)"/><text x="33.7286%" y="159.50"></text></g><g><title>_IO_file_xsgetn (91 samples, 0.99%)</title><rect x="36.7905%" y="117" width="0.9914%" height="15" fill="rgb(247,81,37)"/><text x="37.0405%" y="127.50"></text></g><g><title>__memmove_avx_unaligned_erms (29 samples, 0.32%)</title><rect x="37.4660%" y="101" width="0.3159%" height="15" fill="rgb(209,12,38)"/><text x="37.7160%" y="111.50"></text></g><g><title>__GI__IO_fread (270 samples, 2.94%)</title><rect x="35.2435%" y="133" width="2.9415%" height="15" fill="rgb(227,1,9)"/><text x="35.4935%" y="143.50">__..</text></g><g><title>__GI__IO_sgetn (37 samples, 0.40%)</title><rect x="37.7819%" y="117" width="0.4031%" height="15" fill="rgb(248,47,43)"/><text x="38.0319%" y="127.50"></text></g><g><title>__GI___libc_free (151 samples, 1.65%)</title><rect x="38.1850%" y="133" width="1.6451%" height="15" fill="rgb(221,10,30)"/><text x="38.4350%" y="143.50"></text></g><g><title>__GI___libc_malloc (65 samples, 0.71%)</title><rect x="39.8300%" y="133" width="0.7081%" height="15" fill="rgb(210,229,1)"/><text x="40.0800%" y="143.50"></text></g><g><title>_IO_seekoff_unlocked (35 samples, 0.38%)</title><rect x="42.0852%" y="117" width="0.3813%" height="15" fill="rgb(222,148,37)"/><text x="42.3352%" y="127.50"></text></g><g><title>__GI__IO_file_read (20 samples, 0.22%)</title><rect x="47.2165%" y="101" width="0.2179%" height="15" fill="rgb(234,67,33)"/><text x="47.4665%" y="111.50"></text></g><g><title>__GI__IO_file_seek (12 samples, 0.13%)</title><rect x="47.4344%" y="101" width="0.1307%" height="15" fill="rgb(247,98,35)"/><text x="47.6844%" y="111.50"></text></g><g><title>[libc-2.32.so] (30 samples, 0.33%)</title><rect x="47.6849%" y="85" width="0.3268%" height="15" fill="rgb(247,138,52)"/><text x="47.9349%" y="95.50"></text></g><g><title>__GI__IO_free_backup_area (128 samples, 1.39%)</title><rect x="47.5651%" y="101" width="1.3945%" height="15" fill="rgb(213,79,30)"/><text x="47.8151%" y="111.50"></text></g><g><title>__GI___libc_free (87 samples, 0.95%)</title><rect x="48.0118%" y="85" width="0.9478%" height="15" fill="rgb(246,177,23)"/><text x="48.2618%" y="95.50"></text></g><g><title>_IO_new_file_write (285 samples, 3.10%)</title><rect x="50.5066%" y="53" width="3.1049%" height="15" fill="rgb(230,62,27)"/><text x="50.7566%" y="63.50">_IO..</text></g><g><title>__GI___libc_write (179 samples, 1.95%)</title><rect x="51.6614%" y="37" width="1.9501%" height="15" fill="rgb(216,154,8)"/><text x="51.9114%" y="47.50">_..</text></g><g><title>_IO_new_do_write (541 samples, 5.89%)</title><rect x="49.3736%" y="85" width="5.8939%" height="15" fill="rgb(244,35,45)"/><text x="49.6236%" y="95.50">_IO_new..</text></g><g><title>new_do_write (530 samples, 5.77%)</title><rect x="49.4934%" y="69" width="5.7740%" height="15" fill="rgb(251,115,12)"/><text x="49.7434%" y="79.50">new_do_..</text></g><g><title>__lseek64 (149 samples, 1.62%)</title><rect x="53.6442%" y="53" width="1.6233%" height="15" fill="rgb(240,54,50)"/><text x="53.8942%" y="63.50"></text></g><g><title>__GI__IO_switch_to_get_mode (591 samples, 6.44%)</title><rect x="48.9596%" y="101" width="6.4386%" height="15" fill="rgb(233,84,52)"/><text x="49.2096%" y="111.50">__GI__IO..</text></g><g><title>__GI__IO_file_overflow (12 samples, 0.13%)</title><rect x="55.2675%" y="85" width="0.1307%" height="15" fill="rgb(207,117,47)"/><text x="55.5175%" y="95.50"></text></g><g><title>__GI___read (371 samples, 4.04%)</title><rect x="55.3982%" y="101" width="4.0418%" height="15" fill="rgb(249,43,39)"/><text x="55.6482%" y="111.50">__GI..</text></g><g><title>__GI_fseek (2,112 samples, 23.01%)</title><rect x="40.5382%" y="133" width="23.0090%" height="15" fill="rgb(209,38,44)"/><text x="40.7882%" y="143.50">__GI_fseek</text></g><g><title>__GI__IO_file_seekoff (1,935 samples, 21.08%)</title><rect x="42.4665%" y="117" width="21.0807%" height="15" fill="rgb(236,212,23)"/><text x="42.7165%" y="127.50">__GI__IO_file_seekoff</text></g><g><title>__lseek64 (377 samples, 4.11%)</title><rect x="59.4400%" y="101" width="4.1072%" height="15" fill="rgb(242,79,21)"/><text x="59.6900%" y="111.50">__ls..</text></g><g><title>_init (74 samples, 0.81%)</title><rect x="63.5472%" y="133" width="0.8062%" height="15" fill="rgb(211,96,35)"/><text x="63.7972%" y="143.50"></text></g><g><title>_int_free (115 samples, 1.25%)</title><rect x="64.3534%" y="133" width="1.2529%" height="15" fill="rgb(253,215,40)"/><text x="64.6034%" y="143.50"></text></g><g><title>fseek@plt (10 samples, 0.11%)</title><rect x="65.6607%" y="133" width="0.1089%" height="15" fill="rgb(211,81,21)"/><text x="65.9107%" y="143.50"></text></g><g><title>_ar_file_get (2,954 samples, 32.18%)</title><rect x="33.6965%" y="149" width="32.1822%" height="15" fill="rgb(208,190,38)"/><text x="33.9465%" y="159.50">_ar_file_get</text></g><g><title>malloc@plt (10 samples, 0.11%)</title><rect x="65.7697%" y="133" width="0.1089%" height="15" fill="rgb(235,213,38)"/><text x="66.0197%" y="143.50"></text></g><g><title>_IO_seekoff_unlocked (47 samples, 0.51%)</title><rect x="68.7657%" y="117" width="0.5120%" height="15" fill="rgb(237,122,38)"/><text x="69.0157%" y="127.50"></text></g><g><title>__GI__IO_file_read (10 samples, 0.11%)</title><rect x="74.5070%" y="101" width="0.1089%" height="15" fill="rgb(244,218,35)"/><text x="74.7570%" y="111.50"></text></g><g><title>[libc-2.32.so] (21 samples, 0.23%)</title><rect x="74.8121%" y="85" width="0.2288%" height="15" fill="rgb(240,68,47)"/><text x="75.0621%" y="95.50"></text></g><g><title>__GI__IO_free_backup_area (114 samples, 1.24%)</title><rect x="74.6922%" y="101" width="1.2420%" height="15" fill="rgb(210,16,53)"/><text x="74.9422%" y="111.50"></text></g><g><title>__GI___libc_free (82 samples, 0.89%)</title><rect x="75.0409%" y="85" width="0.8933%" height="15" fill="rgb(235,124,12)"/><text x="75.2909%" y="95.50"></text></g><g><title>_IO_new_file_write (287 samples, 3.13%)</title><rect x="77.1980%" y="53" width="3.1267%" height="15" fill="rgb(224,169,11)"/><text x="77.4480%" y="63.50">_IO..</text></g><g><title>__GI___libc_write (174 samples, 1.90%)</title><rect x="78.4290%" y="37" width="1.8956%" height="15" fill="rgb(250,166,2)"/><text x="78.6790%" y="47.50">_..</text></g><g><title>_IO_new_do_write (571 samples, 6.22%)</title><rect x="76.1848%" y="85" width="6.2207%" height="15" fill="rgb(242,216,29)"/><text x="76.4348%" y="95.50">_IO_new_..</text></g><g><title>new_do_write (562 samples, 6.12%)</title><rect x="76.2828%" y="69" width="6.1227%" height="15" fill="rgb(230,116,27)"/><text x="76.5328%" y="79.50">new_do_w..</text></g><g><title>__lseek64 (190 samples, 2.07%)</title><rect x="80.3355%" y="53" width="2.0699%" height="15" fill="rgb(228,99,48)"/><text x="80.5855%" y="63.50">_..</text></g><g><title>__GI__IO_switch_to_get_mode (608 samples, 6.62%)</title><rect x="75.9342%" y="101" width="6.6238%" height="15" fill="rgb(253,11,6)"/><text x="76.1842%" y="111.50">__GI__IO_..</text></g><g><title>__GI__IO_file_overflow (14 samples, 0.15%)</title><rect x="82.4055%" y="85" width="0.1525%" height="15" fill="rgb(247,143,39)"/><text x="82.6555%" y="95.50"></text></g><g><title>__GI___read (377 samples, 4.11%)</title><rect x="82.5580%" y="101" width="4.1072%" height="15" fill="rgb(236,97,10)"/><text x="82.8080%" y="111.50">__GI..</text></g><g><title>__GI_fseek (2,180 samples, 23.75%)</title><rect x="66.9790%" y="133" width="23.7499%" height="15" fill="rgb(233,208,19)"/><text x="67.2290%" y="143.50">__GI_fseek</text></g><g><title>__GI__IO_file_seekoff (1,969 samples, 21.45%)</title><rect x="69.2777%" y="117" width="21.4511%" height="15" fill="rgb(216,164,2)"/><text x="69.5277%" y="127.50">__GI__IO_file_seekoff</text></g><g><title>__lseek64 (373 samples, 4.06%)</title><rect x="86.6652%" y="101" width="4.0636%" height="15" fill="rgb(220,129,5)"/><text x="86.9152%" y="111.50">__ls..</text></g><g><title>_ar_file_set (2,290 samples, 24.95%)</title><rect x="65.8786%" y="149" width="24.9483%" height="15" fill="rgb(242,17,10)"/><text x="66.1286%" y="159.50">_ar_file_set</text></g><g><title>fwrite@plt (43 samples, 0.47%)</title><rect x="90.8269%" y="149" width="0.4685%" height="15" fill="rgb(242,107,0)"/><text x="91.0769%" y="159.50"></text></g><g><title>ar_swap (6,127 samples, 66.75%)</title><rect x="24.5996%" y="165" width="66.7502%" height="15" fill="rgb(251,28,31)"/><text x="24.8496%" y="175.50">ar_swap</text></g><g><title>_IO_file_xsgetn (16 samples, 0.17%)</title><rect x="91.6767%" y="117" width="0.1743%" height="15" fill="rgb(233,223,10)"/><text x="91.9267%" y="127.50"></text></g><g><title>__GI__IO_fread (36 samples, 0.39%)</title><rect x="91.4806%" y="133" width="0.3922%" height="15" fill="rgb(215,21,27)"/><text x="91.7306%" y="143.50"></text></g><g><title>__GI_fseek (120 samples, 1.31%)</title><rect x="92.0035%" y="133" width="1.3073%" height="15" fill="rgb(232,23,21)"/><text x="92.2535%" y="143.50"></text></g><g><title>__GI__IO_file_seekoff (80 samples, 0.87%)</title><rect x="92.4393%" y="117" width="0.8716%" height="15" fill="rgb(244,5,23)"/><text x="92.6893%" y="127.50"></text></g><g><title>__lseek64 (44 samples, 0.48%)</title><rect x="92.8315%" y="101" width="0.4794%" height="15" fill="rgb(226,81,46)"/><text x="93.0815%" y="111.50"></text></g><g><title>_int_free (14 samples, 0.15%)</title><rect x="93.3217%" y="133" width="0.1525%" height="15" fill="rgb(247,70,30)"/><text x="93.5717%" y="143.50"></text></g><g><title>minmax_floats (201 samples, 2.19%)</title><rect x="91.3498%" y="165" width="2.1898%" height="15" fill="rgb(212,68,19)"/><text x="91.5998%" y="175.50">m..</text></g><g><title>_ar_file_get (197 samples, 2.15%)</title><rect x="91.3934%" y="149" width="2.1462%" height="15" fill="rgb(240,187,13)"/><text x="91.6434%" y="159.50">_..</text></g><g><title>__GI__IO_fread (10 samples, 0.11%)</title><rect x="93.5941%" y="133" width="0.1089%" height="15" fill="rgb(223,113,26)"/><text x="93.8441%" y="143.50"></text></g><g><title>__GI_fseek (31 samples, 0.34%)</title><rect x="93.7684%" y="133" width="0.3377%" height="15" fill="rgb(206,192,2)"/><text x="94.0184%" y="143.50"></text></g><g><title>__GI__IO_file_seekoff (19 samples, 0.21%)</title><rect x="93.8991%" y="117" width="0.2070%" height="15" fill="rgb(241,108,4)"/><text x="94.1491%" y="127.50"></text></g><g><title>__lseek64 (12 samples, 0.13%)</title><rect x="93.9754%" y="101" width="0.1307%" height="15" fill="rgb(247,173,49)"/><text x="94.2254%" y="111.50"></text></g><g><title>minmax_int64_ts (58 samples, 0.63%)</title><rect x="93.5396%" y="165" width="0.6319%" height="15" fill="rgb(224,114,35)"/><text x="93.7896%" y="175.50"></text></g><g><title>_ar_file_get (58 samples, 0.63%)</title><rect x="93.5396%" y="149" width="0.6319%" height="15" fill="rgb(245,159,27)"/><text x="93.7896%" y="159.50"></text></g><g><title>_IO_file_xsgetn (33 samples, 0.36%)</title><rect x="94.8905%" y="117" width="0.3595%" height="15" fill="rgb(245,172,44)"/><text x="95.1405%" y="127.50"></text></g><g><title>__GI__IO_fread (86 samples, 0.94%)</title><rect x="94.4329%" y="133" width="0.9369%" height="15" fill="rgb(236,23,11)"/><text x="94.6829%" y="143.50"></text></g><g><title>__GI__IO_sgetn (11 samples, 0.12%)</title><rect x="95.2500%" y="117" width="0.1198%" height="15" fill="rgb(205,117,38)"/><text x="95.5000%" y="127.50"></text></g><g><title>__GI___libc_free (15 samples, 0.16%)</title><rect x="95.3699%" y="133" width="0.1634%" height="15" fill="rgb(237,72,25)"/><text x="95.6199%" y="143.50"></text></g><g><title>__GI___libc_malloc (14 samples, 0.15%)</title><rect x="95.5333%" y="133" width="0.1525%" height="15" fill="rgb(244,70,9)"/><text x="95.7833%" y="143.50"></text></g><g><title>_IO_seekoff_unlocked (17 samples, 0.19%)</title><rect x="96.6772%" y="117" width="0.1852%" height="15" fill="rgb(217,125,39)"/><text x="96.9272%" y="127.50"></text></g><g><title>[libc-2.32.so] (10 samples, 0.11%)</title><rect x="97.7884%" y="85" width="0.1089%" height="15" fill="rgb(235,36,10)"/><text x="98.0384%" y="95.50"></text></g><g><title>__GI__IO_free_backup_area (19 samples, 0.21%)</title><rect x="97.7557%" y="101" width="0.2070%" height="15" fill="rgb(251,123,47)"/><text x="98.0057%" y="111.50"></text></g><g><title>__GI_fseek (338 samples, 3.68%)</title><rect x="95.6858%" y="133" width="3.6823%" height="15" fill="rgb(221,13,13)"/><text x="95.9358%" y="143.50">__GI..</text></g><g><title>__GI__IO_file_seekoff (230 samples, 2.51%)</title><rect x="96.8624%" y="117" width="2.5057%" height="15" fill="rgb(238,131,9)"/><text x="97.1124%" y="127.50">__..</text></g><g><title>__lseek64 (129 samples, 1.41%)</title><rect x="97.9627%" y="101" width="1.4054%" height="15" fill="rgb(211,50,8)"/><text x="98.2127%" y="111.50"></text></g><g><title>_int_free (36 samples, 0.39%)</title><rect x="99.3790%" y="133" width="0.3922%" height="15" fill="rgb(245,182,24)"/><text x="99.6290%" y="143.50"></text></g><g><title>__libc_start_main (7,433 samples, 80.98%)</title><rect x="18.9127%" y="213" width="80.9783%" height="15" fill="rgb(242,14,37)"/><text x="19.1627%" y="223.50">__libc_start_main</text></g><g><title>main (7,433 samples, 80.98%)</title><rect x="18.9127%" y="197" width="80.9783%" height="15" fill="rgb(246,228,12)"/><text x="19.1627%" y="207.50">main</text></g><g><title>shuffle3 (7,433 samples, 80.98%)</title><rect x="18.9127%" y="181" width="80.9783%" height="15" fill="rgb(213,55,15)"/><text x="19.1627%" y="191.50">shuffle3</text></g><g><title>minmax_sbytes (525 samples, 5.72%)</title><rect x="94.1715%" y="165" width="5.7196%" height="15" fill="rgb(209,9,3)"/><text x="94.4215%" y="175.50">minmax_..</text></g><g><title>_ar_file_get (514 samples, 5.60%)</title><rect x="94.2913%" y="149" width="5.5997%" height="15" fill="rgb(230,59,30)"/><text x="94.5413%" y="159.50">_ar_fil..</text></g><g><title>_start (7,438 samples, 81.03%)</title><rect x="18.8692%" y="229" width="81.0328%" height="15" fill="rgb(209,121,21)"/><text x="19.1192%" y="239.50">_start</text></g><g><title>all (9,179 samples, 100%)</title><rect x="0.0000%" y="261" width="100.0000%" height="15" fill="rgb(220,109,13)"/><text x="0.2500%" y="271.50"></text></g><g><title>shuffle3-releas (9,179 samples, 100.00%)</title><rect x="0.0000%" y="245" width="100.0000%" height="15" fill="rgb(232,18,1)"/><text x="0.2500%" y="255.50">shuffle3-releas</text></g></svg></svg>

@@ -1,0 +1,567 @@
+desc: (none)
+cmd: ./shuffle3-release small-u
+time_unit: i
+#-----------
+snapshot=0
+#-----------
+time=0
+mem_heap_B=0
+mem_heap_extra_B=0
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=1
+#-----------
+time=4048133
+mem_heap_B=32816
+mem_heap_extra_B=8
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=2
+#-----------
+time=4050820
+mem_heap_B=8
+mem_heap_extra_B=16
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=3
+#-----------
+time=4057134
+mem_heap_B=72712
+mem_heap_extra_B=24
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=4
+#-----------
+time=4282565
+mem_heap_B=73736
+mem_heap_extra_B=32
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=5
+#-----------
+time=4289663
+mem_heap_B=74248
+mem_heap_extra_B=40
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=6
+#-----------
+time=4295729
+mem_heap_B=75784
+mem_heap_extra_B=40
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=7
+#-----------
+time=4303612
+mem_heap_B=77832
+mem_heap_extra_B=40
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=8
+#-----------
+time=4318766
+mem_heap_B=86024
+mem_heap_extra_B=48
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=9
+#-----------
+time=4322930
+mem_heap_B=81928
+mem_heap_extra_B=40
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=10
+#-----------
+time=4353188
+mem_heap_B=98312
+mem_heap_extra_B=48
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=11
+#-----------
+time=4361448
+mem_heap_B=90120
+mem_heap_extra_B=40
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=12
+#-----------
+time=4421914
+mem_heap_B=122888
+mem_heap_extra_B=48
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=13
+#-----------
+time=4438366
+mem_heap_B=122888
+mem_heap_extra_B=48
+mem_stacks_B=0
+heap_tree=detailed
+n3: 122888 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 72704 0x493F45A: pool (eh_alloc.cc:123)
+  n1: 72704 0x493F45A: __static_initialization_and_destruction_0 (eh_alloc.cc:262)
+   n1: 72704 0x493F45A: _GLOBAL__sub_I_eh_alloc.cc (eh_alloc.cc:338)
+    n1: 72704 0x40112DD: call_init.part.0 (in /usr/lib/ld-2.32.so)
+     n1: 72704 0x40113C7: _dl_init (in /usr/lib/ld-2.32.so)
+      n1: 72704 0x40020C9: ??? (in /usr/lib/ld-2.32.so)
+       n1: 72704 0x1: ???
+        n1: 72704 0x1FFF000AC6: ???
+         n0: 72704 0x1FFF000AD9: ???
+ n1: 49152 0x10A384: ??? (in /home/avril/work/shuffle3/lean/shuffle3-release)
+  n1: 49152 0x109385: ??? (in /home/avril/work/shuffle3/lean/shuffle3-release)
+   n0: 49152 0x4C6A151: (below main) (in /usr/lib/libc-2.32.so)
+ n0: 1032 in 3 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=14
+#-----------
+time=4438366
+mem_heap_B=106504
+mem_heap_extra_B=40
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=15
+#-----------
+time=4559248
+mem_heap_B=172040
+mem_heap_extra_B=48
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=16
+#-----------
+time=4592084
+mem_heap_B=172040
+mem_heap_extra_B=48
+mem_stacks_B=0
+heap_tree=detailed
+n3: 172040 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 98304 0x10A384: ??? (in /home/avril/work/shuffle3/lean/shuffle3-release)
+  n1: 98304 0x109385: ??? (in /home/avril/work/shuffle3/lean/shuffle3-release)
+   n0: 98304 0x4C6A151: (below main) (in /usr/lib/libc-2.32.so)
+ n1: 72704 0x493F45A: pool (eh_alloc.cc:123)
+  n1: 72704 0x493F45A: __static_initialization_and_destruction_0 (eh_alloc.cc:262)
+   n1: 72704 0x493F45A: _GLOBAL__sub_I_eh_alloc.cc (eh_alloc.cc:338)
+    n1: 72704 0x40112DD: call_init.part.0 (in /usr/lib/ld-2.32.so)
+     n1: 72704 0x40113C7: _dl_init (in /usr/lib/ld-2.32.so)
+      n1: 72704 0x40020C9: ??? (in /usr/lib/ld-2.32.so)
+       n1: 72704 0x1: ???
+        n1: 72704 0x1FFF000AC6: ???
+         n0: 72704 0x1FFF000AD9: ???
+ n0: 1032 in 3 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=17
+#-----------
+time=4592084
+mem_heap_B=139272
+mem_heap_extra_B=40
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=18
+#-----------
+time=4833798
+mem_heap_B=270344
+mem_heap_extra_B=48
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=19
+#-----------
+time=4899402
+mem_heap_B=270344
+mem_heap_extra_B=48
+mem_stacks_B=0
+heap_tree=detailed
+n3: 270344 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 196608 0x10A384: ??? (in /home/avril/work/shuffle3/lean/shuffle3-release)
+  n1: 196608 0x109385: ??? (in /home/avril/work/shuffle3/lean/shuffle3-release)
+   n0: 196608 0x4C6A151: (below main) (in /usr/lib/libc-2.32.so)
+ n1: 72704 0x493F45A: pool (eh_alloc.cc:123)
+  n1: 72704 0x493F45A: __static_initialization_and_destruction_0 (eh_alloc.cc:262)
+   n1: 72704 0x493F45A: _GLOBAL__sub_I_eh_alloc.cc (eh_alloc.cc:338)
+    n1: 72704 0x40112DD: call_init.part.0 (in /usr/lib/ld-2.32.so)
+     n1: 72704 0x40113C7: _dl_init (in /usr/lib/ld-2.32.so)
+      n1: 72704 0x40020C9: ??? (in /usr/lib/ld-2.32.so)
+       n1: 72704 0x1: ???
+        n1: 72704 0x1FFF000AC6: ???
+         n0: 72704 0x1FFF000AD9: ???
+ n0: 1032 in 3 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=20
+#-----------
+time=4899402
+mem_heap_B=204808
+mem_heap_extra_B=40
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=21
+#-----------
+time=5382780
+mem_heap_B=466952
+mem_heap_extra_B=48
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=22
+#-----------
+time=5513920
+mem_heap_B=466952
+mem_heap_extra_B=48
+mem_stacks_B=0
+heap_tree=peak
+n3: 466952 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 393216 0x10A384: ??? (in /home/avril/work/shuffle3/lean/shuffle3-release)
+  n1: 393216 0x109385: ??? (in /home/avril/work/shuffle3/lean/shuffle3-release)
+   n0: 393216 0x4C6A151: (below main) (in /usr/lib/libc-2.32.so)
+ n1: 72704 0x493F45A: pool (eh_alloc.cc:123)
+  n1: 72704 0x493F45A: __static_initialization_and_destruction_0 (eh_alloc.cc:262)
+   n1: 72704 0x493F45A: _GLOBAL__sub_I_eh_alloc.cc (eh_alloc.cc:338)
+    n1: 72704 0x40112DD: call_init.part.0 (in /usr/lib/ld-2.32.so)
+     n1: 72704 0x40113C7: _dl_init (in /usr/lib/ld-2.32.so)
+      n1: 72704 0x40020C9: ??? (in /usr/lib/ld-2.32.so)
+       n1: 72704 0x1: ???
+        n1: 72704 0x1FFF000AC6: ???
+         n0: 72704 0x1FFF000AD9: ???
+ n0: 1032 in 3 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=23
+#-----------
+time=5513920
+mem_heap_B=335880
+mem_heap_extra_B=40
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=24
+#-----------
+time=5892087
+mem_heap_B=73736
+mem_heap_extra_B=32
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=25
+#-----------
+time=5989421
+mem_heap_B=73744
+mem_heap_extra_B=48
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=26
+#-----------
+time=5996279
+mem_heap_B=73992
+mem_heap_extra_B=40
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=27
+#-----------
+time=6002698
+mem_heap_B=74248
+mem_heap_extra_B=40
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=28
+#-----------
+time=6015289
+mem_heap_B=75272
+mem_heap_extra_B=48
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=29
+#-----------
+time=6015414
+mem_heap_B=74760
+mem_heap_extra_B=40
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=30
+#-----------
+time=6040651
+mem_heap_B=76808
+mem_heap_extra_B=48
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=31
+#-----------
+time=6040828
+mem_heap_B=75784
+mem_heap_extra_B=40
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=32
+#-----------
+time=6091310
+mem_heap_B=79880
+mem_heap_extra_B=48
+mem_stacks_B=0
+heap_tree=detailed
+n4: 79880 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 72704 0x493F45A: pool (eh_alloc.cc:123)
+  n1: 72704 0x493F45A: __static_initialization_and_destruction_0 (eh_alloc.cc:262)
+   n1: 72704 0x493F45A: _GLOBAL__sub_I_eh_alloc.cc (eh_alloc.cc:338)
+    n1: 72704 0x40112DD: call_init.part.0 (in /usr/lib/ld-2.32.so)
+     n1: 72704 0x40113C7: _dl_init (in /usr/lib/ld-2.32.so)
+      n1: 72704 0x40020C9: ??? (in /usr/lib/ld-2.32.so)
+       n1: 72704 0x1: ???
+        n1: 72704 0x1FFF000AC6: ???
+         n0: 72704 0x1FFF000AD9: ???
+ n2: 6144 0x10A384: ??? (in /home/avril/work/shuffle3/lean/shuffle3-release)
+  n1: 6144 0x1095C2: ??? (in /home/avril/work/shuffle3/lean/shuffle3-release)
+   n0: 6144 0x4C6A151: (below main) (in /usr/lib/libc-2.32.so)
+  n0: 0 in 1 place, below massif's threshold (1.00%)
+ n1: 1024 0x4CB6E03: _IO_file_doallocate (in /usr/lib/libc-2.32.so)
+  n1: 1024 0x4CC570F: _IO_doallocbuf (in /usr/lib/libc-2.32.so)
+   n1: 1024 0x4CC48A7: _IO_file_overflow@@GLIBC_2.2.5 (in /usr/lib/libc-2.32.so)
+    n1: 1024 0x4CC3955: _IO_file_xsputn@@GLIBC_2.2.5 (in /usr/lib/libc-2.32.so)
+     n1: 1024 0x4CB8330: fwrite (in /usr/lib/libc-2.32.so)
+      n1: 1024 0x4877FD7: fmt::v7::vprint(_IO_FILE*, fmt::v7::basic_string_view<char>, fmt::v7::format_args) (in /usr/lib/libfmt.so.7.1.2)
+       n1: 1024 0x10A258: ??? (in /home/avril/work/shuffle3/lean/shuffle3-release)
+        n1: 1024 0x10933E: ??? (in /home/avril/work/shuffle3/lean/shuffle3-release)
+         n0: 1024 0x4C6A151: (below main) (in /usr/lib/libc-2.32.so)
+ n0: 8 in 2 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=33
+#-----------
+time=6091591
+mem_heap_B=77832
+mem_heap_extra_B=40
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=34
+#-----------
+time=6192490
+mem_heap_B=86024
+mem_heap_extra_B=48
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=35
+#-----------
+time=6196654
+mem_heap_B=81928
+mem_heap_extra_B=40
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=36
+#-----------
+time=6398233
+mem_heap_B=98312
+mem_heap_extra_B=48
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=37
+#-----------
+time=6406493
+mem_heap_B=90120
+mem_heap_extra_B=40
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=38
+#-----------
+time=6809904
+mem_heap_B=122888
+mem_heap_extra_B=48
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=39
+#-----------
+time=6826356
+mem_heap_B=106504
+mem_heap_extra_B=40
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=40
+#-----------
+time=7633039
+mem_heap_B=172040
+mem_heap_extra_B=48
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=41
+#-----------
+time=7665875
+mem_heap_B=139272
+mem_heap_extra_B=40
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=42
+#-----------
+time=7951930
+mem_heap_B=73736
+mem_heap_extra_B=32
+mem_stacks_B=0
+heap_tree=detailed
+n3: 73736 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 72704 0x493F45A: pool (eh_alloc.cc:123)
+  n1: 72704 0x493F45A: __static_initialization_and_destruction_0 (eh_alloc.cc:262)
+   n1: 72704 0x493F45A: _GLOBAL__sub_I_eh_alloc.cc (eh_alloc.cc:338)
+    n1: 72704 0x40112DD: call_init.part.0 (in /usr/lib/ld-2.32.so)
+     n1: 72704 0x40113C7: _dl_init (in /usr/lib/ld-2.32.so)
+      n1: 72704 0x40020C9: ??? (in /usr/lib/ld-2.32.so)
+       n1: 72704 0x1: ???
+        n1: 72704 0x1FFF000AC6: ???
+         n0: 72704 0x1FFF000AD9: ???
+ n1: 1024 0x4CB6E03: _IO_file_doallocate (in /usr/lib/libc-2.32.so)
+  n1: 1024 0x4CC570F: _IO_doallocbuf (in /usr/lib/libc-2.32.so)
+   n1: 1024 0x4CC48A7: _IO_file_overflow@@GLIBC_2.2.5 (in /usr/lib/libc-2.32.so)
+    n1: 1024 0x4CC3955: _IO_file_xsputn@@GLIBC_2.2.5 (in /usr/lib/libc-2.32.so)
+     n1: 1024 0x4CB8330: fwrite (in /usr/lib/libc-2.32.so)
+      n1: 1024 0x4877FD7: fmt::v7::vprint(_IO_FILE*, fmt::v7::basic_string_view<char>, fmt::v7::format_args) (in /usr/lib/libfmt.so.7.1.2)
+       n1: 1024 0x10A258: ??? (in /home/avril/work/shuffle3/lean/shuffle3-release)
+        n1: 1024 0x10933E: ??? (in /home/avril/work/shuffle3/lean/shuffle3-release)
+         n0: 1024 0x4C6A151: (below main) (in /usr/lib/libc-2.32.so)
+ n0: 8 in 3 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=43
+#-----------
+time=7971885
+mem_heap_B=73744
+mem_heap_extra_B=48
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=44
+#-----------
+time=7979276
+mem_heap_B=75784
+mem_heap_extra_B=40
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=45
+#-----------
+time=7985879
+mem_heap_B=77832
+mem_heap_extra_B=40
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=46
+#-----------
+time=7998473
+mem_heap_B=86024
+mem_heap_extra_B=48
+mem_stacks_B=0
+heap_tree=detailed
+n4: 86024 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 72704 0x493F45A: pool (eh_alloc.cc:123)
+  n1: 72704 0x493F45A: __static_initialization_and_destruction_0 (eh_alloc.cc:262)
+   n1: 72704 0x493F45A: _GLOBAL__sub_I_eh_alloc.cc (eh_alloc.cc:338)
+    n1: 72704 0x40112DD: call_init.part.0 (in /usr/lib/ld-2.32.so)
+     n1: 72704 0x40113C7: _dl_init (in /usr/lib/ld-2.32.so)
+      n1: 72704 0x40020C9: ??? (in /usr/lib/ld-2.32.so)
+       n1: 72704 0x1: ???
+        n1: 72704 0x1FFF000AC6: ???
+         n0: 72704 0x1FFF000AD9: ???
+ n2: 12288 0x10A384: ??? (in /home/avril/work/shuffle3/lean/shuffle3-release)
+  n1: 12288 0x10973E: ??? (in /home/avril/work/shuffle3/lean/shuffle3-release)
+   n0: 12288 0x4C6A151: (below main) (in /usr/lib/libc-2.32.so)
+  n0: 0 in 2 places, all below massif's threshold (1.00%)
+ n1: 1024 0x4CB6E03: _IO_file_doallocate (in /usr/lib/libc-2.32.so)
+  n1: 1024 0x4CC570F: _IO_doallocbuf (in /usr/lib/libc-2.32.so)
+   n1: 1024 0x4CC48A7: _IO_file_overflow@@GLIBC_2.2.5 (in /usr/lib/libc-2.32.so)
+    n1: 1024 0x4CC3955: _IO_file_xsputn@@GLIBC_2.2.5 (in /usr/lib/libc-2.32.so)
+     n1: 1024 0x4CB8330: fwrite (in /usr/lib/libc-2.32.so)
+      n1: 1024 0x4877FD7: fmt::v7::vprint(_IO_FILE*, fmt::v7::basic_string_view<char>, fmt::v7::format_args) (in /usr/lib/libfmt.so.7.1.2)
+       n1: 1024 0x10A258: ??? (in /home/avril/work/shuffle3/lean/shuffle3-release)
+        n1: 1024 0x10933E: ??? (in /home/avril/work/shuffle3/lean/shuffle3-release)
+         n0: 1024 0x4C6A151: (below main) (in /usr/lib/libc-2.32.so)
+ n0: 8 in 2 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=47
+#-----------
+time=8002637
+mem_heap_B=81928
+mem_heap_extra_B=40
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=48
+#-----------
+time=8027775
+mem_heap_B=98312
+mem_heap_extra_B=48
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=49
+#-----------
+time=8036035
+mem_heap_B=90120
+mem_heap_extra_B=40
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=50
+#-----------
+time=8086261
+mem_heap_B=122888
+mem_heap_extra_B=48
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=51
+#-----------
+time=8102713
+mem_heap_B=106504
+mem_heap_extra_B=40
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=52
+#-----------
+time=8147526
+mem_heap_B=73736
+mem_heap_extra_B=32
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=53
+#-----------
+time=8156172
+mem_heap_B=1032
+mem_heap_extra_B=24
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=54
+#-----------
+time=8157131
+mem_heap_B=8
+mem_heap_extra_B=16
+mem_stacks_B=0
+heap_tree=empty
