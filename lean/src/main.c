@@ -11,26 +11,62 @@
 #include <rng.h>
 #include <work.h>
 
+#define noreturn __attribute__((noreturn)) void
+
 _Static_assert(sizeof(float)==sizeof(uint32_t), "float is not 32 bits");
+
+const char* _prog_name;
+
+noreturn help_then_exit()
+{
+	fprintf(stderr, "Try passing `-h`\n");
+	exit(1);
+}
+
+void usage()
+{
+	printf( "shuffle3 - 3 pass binary shuffler\n"
+		"Usage: %s -s <file>\n"
+		"Usage: %s -u <file>\n", _prog_name, _prog_name);
+	printf("\nOPTIONS:\n"
+			"  -s\tShuffle file in place\n"
+			"  -u\tUnshuffle file in place\n");
+}
 
 int main(int argc, char** argv)
 {
-	//struct prog_args args = {.argc = argc, .argv = argv};
-	
-	//rng_test();
-	
-	//rng_t r = rng_new(RNG_INIT(RNG_KIND_FRNG, frng = { { 1.0, 2.0 } }));
-	//rng_test_spec(r);
-	//rng_free(r);
+	_prog_name = argv[0];
 
-	if( argv[1] ) {
-		//map_and_then(argv[1], &map_callback, &args);
-		return do_work((work_args_t) {
-				.op = OP_SHUFFLE_IP,
-				.data.op_shuffle_ip.file = argv[1],
-				});
+	work_args_t parsed;
+
+	if( !argv[1] || *(argv[1]) != '-') help_then_exit(); 
+	
+	switch(argv[1][1])
+	{
+		case 's': 
+			parsed.op = OP_SHUFFLE_IP;
+			if(!(parsed.data.op_shuffle_ip.file = argv[2]))
+			{
+				fprintf(stderr, "Error: -s expected file argument.\n");
+				return 1;
+			}
+			break;
+		case 'u':
+			parsed.op = OP_UNSHUFFLE_IP;
+			if(!(parsed.data.op_unshuffle_ip.file = argv[2]))
+			{
+				fprintf(stderr, "Error: -u expected file argument.\n");
+				return 1;
+			}
+			break;
+		case 'h':
+			usage();
+			return 0;
+		default:
+			fprintf(stderr, "Error: unknown argument `%s'\n\n", argv[1]);
+			help_then_exit();
 	}
 
-	return 0;
+	return do_work(parsed);
 }
 

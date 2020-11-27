@@ -20,9 +20,10 @@ extern "C" {
 #define dprintf(fmt, ...)
 #endif
 
+extern const char* _prog_name;
+
 #ifdef __cplusplus
 }
-
 #endif
 
 #endif /* _SHUFFLE3_H */
