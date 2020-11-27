@@ -75,5 +75,9 @@ The build and unstripped binary will be `shuffle3-debug`.
 Before switching between `release` and `debug` targets, remember to run `make clean`.
 To disable stripping of release build binaries, run with `make STRIP=: release`
 
+## Gentoo ebuild
+There is a gentoo ebuild for this project in the overlay [test-overlay](https://git.flanchan.moe/birb/test-overlay). 
+[direct link](https://git.flanchan.moe/birb/test-overlay/src/branch/master/app-misc/shuffle3/shuffle3-2.0.0.ebuild)
+
 # License
 GPL'd with <3
