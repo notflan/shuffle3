@@ -2,8 +2,6 @@
 #include <functional>
 #include <cfloat>
 
-#include <fmt/format.h>
-
 #include <shuffle3.h>
 #include <panic.h>
 #include <map.h>

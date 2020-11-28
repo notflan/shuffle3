@@ -14,13 +14,6 @@ extern "C" {
 #define _FORCE_INLINE __attribute__((gnu_inline)) extern inline
 #endif
 
-	/*
-#ifdef DEBUG
-#define dprintf(fmt, ...) printf("[dbg @" __FILE__ "->%s:%d] " fmt "\n", __func__, __LINE__ __VA_OPT__(,) __VA_ARGS__)
-#else
-#define dprintf(fmt, ...)
-#endif
-*/
 extern const char* _prog_name;
 
 #ifdef __cplusplus
