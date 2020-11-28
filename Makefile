@@ -71,10 +71,12 @@ $(PROJECT)-debug: LDFLAGS += $(DEBUG_LDFLAGS)
 $(PROJECT)-debug: $(OBJ)
 	$(CXX) $^ $(CXXFLAGS) -o $@ $(LDFLAGS)
 
-clean:
+clean-rebuild:
 	rm -rf obj
+
+clean: clean-rebuild
 	rm -f $(PROJECT)-{release,debug}
 
 test-all:
-	@./test.sh ./$(PROJECT)-debug ./$(PROJECT)-release
+	@./test.sh ./$(PROJECT)-*
 

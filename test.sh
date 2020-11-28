@@ -41,14 +41,11 @@ echo ">>> Initialising"
 dd if=/dev/urandom of=$TFILE bs=$FSIZE count=$FCNT >> /dev/null 2>&1 || exit -1
 cp $TFILE $TFILE2 || exit -1
 
-if [[ -f "$1" ]]; then
-	echo ">>> Testing $1"
-	stest "$1" || exit 1
-fi
-
-if [[ -f  "$2" ]]; then
-	echo ">>> Testing $2"
-	stest "$2" || exit 2
-fi
+for ex in "$@"; do
+	if [[ -f "$ex" ]]; then
+		echo ">>> Testing $ex"
+		stest "$ex" || exit 1
+	fi
+done
 
 echo "Passed."
