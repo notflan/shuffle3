@@ -6,7 +6,12 @@ INCLUDE = include
 
 PROJECT=shuffle3
 
-COMMON_FLAGS = -Wall -pedantic $(addprefix -I,$(INCLUDE)) -fno-strict-aliasing
+# Currently supported:
+#	_FS_SPILL_BUFFER:	Use file backed buffer instead of memory backed one for unshuffling. See `shuffle3.h`.
+#	DEBUG:		Pretend we're building a debug release even though we're not. Will enable additional output messages and may interfere with some optimisations
+FEATURE_FLAGS?=
+
+COMMON_FLAGS = $(addprefix -D,$(FEATURE_FLAGS)) -Wall -pedantic $(addprefix -I,$(INCLUDE)) -fno-strict-aliasing
 
 OPT_FLAGS?= -march=native -fgraphite -fopenmp -floop-parallelize-all -ftree-parallelize-loops=4 \
 	    -floop-interchange -ftree-loop-distribution -floop-strip-mine -floop-block \

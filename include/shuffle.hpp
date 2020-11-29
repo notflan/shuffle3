@@ -29,6 +29,7 @@ namespace rng {
 		if(!span.size()) return;
 
 #ifdef _FS_SPILL_BUFFER
+#warning "_FS_SPILL_BUFFER is still experimental"
 		file_vector<std::size_t> rng_values(span.size());
 #else
 		std::vector<std::size_t> rng_values(span.size());
