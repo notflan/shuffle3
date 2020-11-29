@@ -59,6 +59,7 @@ FB::FB(size_t cap) : inner(std::make_unique<FB::impl>())
 	if(!fvec_new(&inner->backing, inner->file->c_str())) panic("Failed to open backing for temp file buffer");
 
 }
+FB::FB(file_back_buffer&& m) : inner(std::move(m.inner)){}
 FB::FB() : FB(DEFAULT_CAP){}
 FB::~FB()
 {
