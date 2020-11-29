@@ -15,7 +15,7 @@ struct file_back_buffer
 	file_back_buffer();
 	file_back_buffer(std::size_t cap);
 	file_back_buffer(const file_back_buffer& c) = delete;
-	inline file_back_buffer(file_back_buffer&& m) : inner(std::move(m.inner)){}
+	file_back_buffer(file_back_buffer&& m);
 
 	void push_buf(byte* buf, std::size_t len);
 	bool back(byte* buf, std::size_t len) const;
@@ -46,7 +46,7 @@ template<typename T>
 struct file_vector
 {
 	inline file_vector() : file_vector(file_back_buffer::DEFAULT_CAP){}
-	inline file_vector(std::size_t cap) : inserter(file_back_buffer(cap)), len(0), current_back(std::vector(sizeof(T))) {current_back.resize(sizeof(T));}
+	inline file_vector(std::size_t cap) : inserter(file_back_buffer(cap)), len(0), current_back(std::vector<unsigned char>(sizeof(T))) {current_back.resize(sizeof(T));}
 	inline file_vector(const file_vector<T>& c) = delete;
 	inline file_vector(file_vector<T>&& m) : inserter(std::move(m.inserter)), len(m.len), current_back(std::move(m.current_back)){}
 
@@ -74,8 +74,10 @@ struct file_vector
 		if(!inserter.pop_n(sizeof(T))) panic("pop_back(): 0 elements");
 		len-=1;
 	}
+
+	inline const std::size_t size() const { return len; }
 private:
-	mutable std::vector<unsigned char> current_back; // what an awful hack...
 	file_back_buffer inserter;
-	std::uint64_t len;
+	std::size_t len;
+	mutable std::vector<unsigned char> current_back; // what an awful hack...
 };

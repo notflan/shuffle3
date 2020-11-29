@@ -5,6 +5,10 @@
 #include <algorithm>
 #include <iostream>
 
+#include <fsvec.hpp>
+
+#include <shuffle3.h>
+
 namespace rng {
 	template<typename T, typename R>
 	inline void shuffle(R& rng, span<T> span)
@@ -23,7 +27,12 @@ namespace rng {
 	inline void unshuffle(R& rng, span<T> span)
 	{
 		if(!span.size()) return;
+
+#ifdef _FS_SPILL_BUFFER
+		file_vector<std::size_t> rng_values(span.size());
+#else
 		std::vector<std::size_t> rng_values(span.size());
+#endif
 
 		std::cout << " -> unshuffling " << span.size() << " objects...";
 		for(std::size_t i=span.size()-1;i>0;i--)

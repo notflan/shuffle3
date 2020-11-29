@@ -4,7 +4,7 @@
 
 int fvec_new(fvec_t* restrict obj, const char* path)
 {
-	obj->backing = fopen(path, "wb");
+	obj->backing = fopen(path, "w+b");
 	if(!obj->backing) {
 		perror("fvec_new(): Failed to open file");
 		return 0;
@@ -60,7 +60,7 @@ int fvec_get_whole_buffer(const fvec_t* restrict obj, void* _buffer, size_t _sz)
 	while ( w<_sz && (c=fread(buffer+w, 1, sz-w, obj->backing))>0 ) w+=c;
 	if (w!=_sz) {
 		perror("Corrupted buffer state, aborting");
-		panic("Cannot continue");
+		panic("Cannot continue on FD %d (%p)", fileno(obj->backing), obj->backing);
 	}
 
 	return 1;

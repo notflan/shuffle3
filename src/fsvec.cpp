@@ -3,6 +3,7 @@
 #include <fsvec.hpp>
 #include <uuid.hpp>
 #include <fsvec.h>
+#include <debug.h>
 
 #define FB file_back_buffer
 using std::size_t;
@@ -13,17 +14,25 @@ struct temp_file
 {
 	inline temp_file(const temp_file& c) = delete;
 
-	inline temp_file(temp_file&& m) : name(std::move(m.name)) {}
-	inline temp_file() : name(uuid::generate().to_string()){}
+	inline temp_file(temp_file&& m) : name(std::move(m.name)) { m._full_path.clear(); }
+	inline temp_file() : name(uuid::generate().to_string()+"-s3"){}
 	inline temp_file(const char* name) : name(name) {}
 	inline temp_file(std::string&& name) : name(name) {}
 
-	inline ~temp_file() =  default;
+	inline ~temp_file()
+	{
+		if(!_full_path.empty() && fs::exists(_full_path) ) {
+			D_dprintf("tfile removing: %s", _full_path.c_str());
+			fs::remove(_full_path);
+		}
+	}
 	
 	inline const fs::path& full_path() const
 	{
-		if(_full_path.empty())
-			_full_path = fs::canonical( fs::temp_directory_path() / name );
+		if(_full_path.empty()) {
+			_full_path = fs::absolute( fs::temp_directory_path() / name );
+			D_dprintf("tfile path: %s", _full_path.c_str());
+		}
 		return _full_path;
 	}
 	inline const std::string& base_name() const { return name; }
@@ -40,11 +49,6 @@ struct FB::impl
 	temp_file file;
 
 	fvec_t backing;
-
-	inline ~impl() 
-	{
-		fvec_close(&backing);
-	}
 };
 
 FB::FB(size_t cap) : inner(std::make_unique<FB::impl>())
@@ -56,6 +60,10 @@ FB::FB(size_t cap) : inner(std::make_unique<FB::impl>())
 
 }
 FB::FB() : FB(DEFAULT_CAP){}
+FB::~FB()
+{
+	fvec_close(&inner->backing);
+}
 
 void FB::push_buf(byte* buf, size_t len)
 {
@@ -70,4 +78,28 @@ bool FB::back(byte* buf, size_t len) const
 bool FB::pop_n(size_t len)
 {
 	return !!fvec_pop_end(&inner->backing, len);
+}
+
+extern "C" void _fb_run_tests()
+{
+	file_vector<int> test;
+	int r0,r1=0;
+	for(int i=0;i<10;i++) {
+		D_dprintf("push: %d", (10-i));
+		test.push_back(10-i);
+		r1+= (10-i);
+	}
+	D_dprintf("r1: %d", r1);
+	r0=0;
+	while(test.size())
+	{
+		r0+=test.back();
+		D_dprintf("back: %d", test.back());
+		test.pop_back();
+	}
+	D_dprintf("r0: %d", r0);
+
+	if(r0!=r1) panic("fb failed test: %d, %d", r0, r1);
+
+	D_dprintf("test successful");
 }

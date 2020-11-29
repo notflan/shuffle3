@@ -19,6 +19,8 @@ _Static_assert(sizeof(float)==sizeof(uint32_t), "float is not 32 bits");
 
 const char* _prog_name;
 
+extern void _fb_run_tests();
+
 noreturn help_then_exit()
 {
 	fprintf(stderr, "Try passing `-h`\n");
@@ -41,6 +43,7 @@ int main(int argc, char** argv)
 {
 	_prog_name = argv[0];
 
+	//_fb_run_tests();
 	work_args_t parsed;
 
 	if( !argv[1] || *(argv[1]) != '-') help_then_exit(); 

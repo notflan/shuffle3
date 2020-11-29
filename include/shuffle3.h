@@ -14,6 +14,10 @@ extern "C" {
 #define _FORCE_INLINE __attribute__((gnu_inline)) extern inline
 #endif
 
+//** Features **//
+
+//#define _FS_SPILL_BUFFER /* Use a file-backed buffer when unshuffling in cases of too high memory usage. Will cause massive slowdowns but can stop OOMs when unshuffling large files */
+
 extern const char* _prog_name;
 
 #ifdef __cplusplus
