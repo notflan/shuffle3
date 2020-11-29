@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <memory>
 #include <utility>
+#include <vector>
 
 #include <panic.h>
 
@@ -17,9 +18,8 @@ struct file_back_buffer
 	inline file_back_buffer(file_back_buffer&& m) : inner(std::move(m.inner)){}
 
 	void push_buf(byte* buf, std::size_t len);
-	byte* back(std::size_t len);
-	const byte* back(std::size_t len) const;
-	void pop_n(std::size_t len);
+	bool back(byte* buf, std::size_t len) const;
+	bool pop_n(std::size_t len);
 
 	~file_back_buffer();
 private:
@@ -45,10 +45,10 @@ namespace {
 template<typename T>
 struct file_vector
 {
-	inline file_vector(){}
-	inline file_vector(std::size_t cap) : inserter(file_back_buffer(cap)), len(0) {}
+	inline file_vector() : file_vector(file_back_buffer::DEFAULT_CAP){}
+	inline file_vector(std::size_t cap) : inserter(file_back_buffer(cap)), len(0), current_back(std::vector(sizeof(T))) {current_back.resize(sizeof(T));}
 	inline file_vector(const file_vector<T>& c) = delete;
-	inline file_vector(file_vector<T>&& m) : inserter(std::move(m.inserter)), len(m.len) {}
+	inline file_vector(file_vector<T>&& m) : inserter(std::move(m.inserter)), len(m.len), current_back(std::move(m.current_back)){}
 
 	inline void push_back(T&& value)
 	{
@@ -58,21 +58,24 @@ struct file_vector
 	inline T& back()
 	{
 		if(!len) panic("back() called on empty file_vector");
-		return *_die_if_null((T*)inserter.back(sizeof(T)), "file_vector::back() returned null pointer");
+		if(!inserter.back(&current_back[0], sizeof(T))) panic("back() failed");
+		return *_die_if_null((T*)&current_back[0], "file_vector::back() returned null pointer");
 	}
 	inline const T& back() const
 	{
 		if(!len) panic("back() called on empty file_vector");
-		return *_die_if_null((const T*)inserter.back(sizeof(T)), "file_vector::back() (const) returned null pointer");
+		if(!inserter.back(&current_back[0], sizeof(T))) panic("back() failed");
+		return *_die_if_null((const T*)&current_back[0], "file_vector::back() (const) returned null pointer");
 	}
 	inline void pop_back()
 	{
 		if(!len) return;
 
-		inserter.pop_n(sizeof(T));
+		if(!inserter.pop_n(sizeof(T))) panic("pop_back(): 0 elements");
 		len-=1;
 	}
 private:
+	mutable std::vector<unsigned char> current_back; // what an awful hack...
 	file_back_buffer inserter;
 	std::uint64_t len;
 };
