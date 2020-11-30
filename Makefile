@@ -133,6 +133,7 @@ $(PROJECT)-pgo: | pgo-profile
 	find ./obj/pgo -name \*.o -exec rm {} +
 	$(MAKE) pgo-use
 	mv pgo-use $@
+	$(STRIP) $@
 
 clean-rebuild:
 	rm -rf obj
