@@ -107,7 +107,9 @@ struct fixed_spill_vector : public i_back_inserter<T>
 {
 	constexpr const static std::size_t SPILL_AT = Spill;
 
-	inline fixed_spill_vector() : mem(std::make_unique<std::array<T, Spill> >()){}
+	inline fixed_spill_vector() : mem(std::make_unique<std::array<T, Spill> >()){
+		D_dprintf("alloc cap (static): %lu", Spill);
+	}
 	inline fixed_spill_vector(const fixed_spill_vector<T>& c) = delete;
 	inline fixed_spill_vector(fixed_spill_vector<T>&& m)
 		: mem(std::move(m.mem)),
@@ -159,5 +161,52 @@ private:
 	ssize_t mem_fill_ptr=-1;
 
 	std::unique_ptr<std::array<T, Spill>> mem;
+	file_vector<T> fil;
+};
+
+template<typename T>
+struct dynamic_spill_vector : public i_back_inserter<T>
+{
+	inline dynamic_spill_vector() : dynamic_spill_vector(FSV_DEFAULT_SPILL_AT){}
+	inline dynamic_spill_vector(std::size_t cap) : dynamic_spill_vector(cap, cap){}
+	inline dynamic_spill_vector(std::size_t cap, std::size_t spill) : _spill_at(spill), mem(std::vector<T>()), fil(file_vector<T>(cap)) {
+		mem.reserve(cap);
+		D_dprintf("alloc cap %lu (sz %lu == 0?), spill %lu", cap, mem.size(), spill_at());
+	}
+	inline dynamic_spill_vector(const dynamic_spill_vector<T>& c) = delete;
+	inline dynamic_spill_vector(dynamic_spill_vector<T>&& m) :
+		_spill_at(m._spill_at),
+		mem(std::move(m.mem)),
+		fil(std::move(m.fil)){}
+
+	inline void push_back(T&& value) override
+	{
+		if(size()>=spill_at()) {
+			D_dprintf("Spilling: sz %lu, spl: %lu", size(), spill_at());
+			fil.push_back(std::move(value));
+		}
+		else	mem.push_back(std::move(value));
+	}
+	inline void pop_back() override
+	{
+		if(fil.size())  fil.pop_back();
+		else		mem.pop_back();
+	}
+	inline const T& back() const override
+	{
+		if(fil.size())  return fil.back();
+		else		return mem.back();
+	}
+	inline T& back() override
+	{
+		if(fil.size())  return fil.back();
+		else		return mem.back();	
+	}
+	inline const std::size_t size() const override { return mem.size() + fil.size(); }
+
+	inline const std::size_t spill_at() const { return _spill_at; }
+private:
+	std::size_t _spill_at;
+	std::vector<T> mem;
 	file_vector<T> fil;
 };

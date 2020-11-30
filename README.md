@@ -80,10 +80,11 @@ To disable stripping of release build binaries, run with `make STRIP=: release`
 
 ### Compile-time flags
 There are some build-time flags you can switch while building by appending to the `FEATURE_FLAGS` variable.
-| Flag               | Description                                                                                                                                                                                                           |
-|--------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `DEBUG`            | Pretend we're building a debug release even though we're not.                                                                                                                                                         |
-| `_FS_SPILL_BUFFER` | Spill buffers into a file if they grow over a threshold. Can cause massive slowdowns but prevent OOMs while unshuffling on systems with low available memory. See [shuffle3.h](./include/shuffle3.h) for more details |
+| Flag                   | Description                                                                                                                                                                                                           |
+|------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `DEBUG`                | Pretend we're building a debug release even though we're not.                                                                                                                                                         |
+| `_FS_SPILL_BUFFER`     | Spill buffers into a file if they grow over a threshold. Can cause massive slowdowns but prevent OOMs while unshuffling on systems with low available memory. See [shuffle3.h](./include/shuffle3.h) for more details |
+| `_FS_SPILL_BUFFER=DYN` | Same as above except allocates memory dynamically. Might be faster.                                                                                                                                                   |
 
 
 ## Gentoo ebuild

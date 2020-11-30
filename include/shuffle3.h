@@ -21,6 +21,16 @@ extern "C" {
 /// When to spill a file-backed buffer onto the fs (only used when `_FS_SPILL_BUFFER` is enabled).
 #define FSV_DEFAULT_SPILL_AT ((1024 * 1024) * 10) //10MB 
 
+/*
+#ifdef _FS_SPILL_BUFFER
+#define DYN 1
+#if _FS_SPILL_BUFFER == DYN
+#undef _FS_SPILL_BUFFER
+#define _FS_SPILL_BUFFER DYN
+#endif
+#undef DYN
+#endif
+*/
 //** Globals *//
 
 extern const char* _prog_name;
