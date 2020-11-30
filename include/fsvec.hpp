@@ -25,6 +25,12 @@ struct i_back_inserter
 	virtual inline ~i_back_inserter() =default;
 };
 
+struct i_shunt
+{
+	virtual bool is_full() const =0;
+	virtual inline ~i_shunt() =default;
+};
+
 struct file_back_buffer
 {
 	const static constexpr std::size_t DEFAULT_CAP = 1024;
@@ -164,49 +170,75 @@ private:
 	file_vector<T> fil;
 };
 
-template<typename T>
-struct dynamic_spill_vector : public i_back_inserter<T>
+template<typename T, typename Shunt>
+	requires(std::is_base_of<i_back_inserter<T>, Shunt >::value)
+struct shunt : public i_back_inserter<T>, protected i_shunt
 {
-	inline dynamic_spill_vector() : dynamic_spill_vector(FSV_DEFAULT_SPILL_AT){}
-	inline dynamic_spill_vector(std::size_t cap) : dynamic_spill_vector(cap, cap){}
-	inline dynamic_spill_vector(std::size_t cap, std::size_t spill) : _spill_at(spill), mem(std::vector<T>()), fil(file_vector<T>(cap)) {
+	typedef Shunt spill_type;
+	
+	inline shunt() : shunt(FSV_DEFAULT_SPILL_AT){}
+	inline shunt(std::size_t cap) : shunt(cap, cap){}
+	inline shunt(std::size_t cap, std::size_t spill) : _spill_at(spill), mem(std::vector<T>()), fil(nullptr) {
 		mem.reserve(cap);
 		D_dprintf("alloc cap %lu (sz %lu == 0?), spill %lu", cap, mem.size(), spill_at());
 	}
-	inline dynamic_spill_vector(const dynamic_spill_vector<T>& c) = delete;
-	inline dynamic_spill_vector(dynamic_spill_vector<T>&& m) :
+	inline shunt(const shunt<T, Shunt>& c) = delete;
+	inline shunt(shunt<T, Shunt>&& m) :
 		_spill_at(m._spill_at),
 		mem(std::move(m.mem)),
 		fil(std::move(m.fil)){}
 
 	inline void push_back(T&& value) override
 	{
-		if(size()>=spill_at()) {
-			D_dprintf("Spilling: sz %lu, spl: %lu", size(), spill_at());
-			fil.push_back(std::move(value));
+		if(is_full()) {
+			spl()->push_back(std::move(value));
 		}
 		else	mem.push_back(std::move(value));
 	}
 	inline void pop_back() override
 	{
-		if(fil.size())  fil.pop_back();
-		else		mem.pop_back();
+		if(is_full() && spl()->size())  spl()->pop_back();
+		else				mem.pop_back();
 	}
 	inline const T& back() const override
 	{
-		if(fil.size())  return fil.back();
-		else		return mem.back();
+		if(is_full() && spl()->size())  return spl()->back();
+		else				return mem.back();
 	}
 	inline T& back() override
 	{
-		if(fil.size())  return fil.back();
-		else		return mem.back();	
+		if(is_full() && spl()->size())  return spl()->back();
+		else				return mem.back();	
 	}
-	inline const std::size_t size() const override { return mem.size() + fil.size(); }
+	inline const std::size_t size() const override { return mem.size() + (fil ? fil->size() : 0); }
 
 	inline const std::size_t spill_at() const { return _spill_at; }
+	inline bool is_spilling() const { return is_full(); }
+protected:
+	inline bool is_full() const override { return size()>=spill_at(); }
 private:
+	inline const spill_type* spl() const
+	{
+		if(is_full()) {
+			if(!fil) fil = std::make_unique<spill_type>();
+			return fil.get();
+		} else {
+			return fil.get();
+		}
+	}
+	inline spill_type* spl()
+	{
+ 		if(is_full()) {
+			if(!fil) fil = std::make_unique<spill_type>();
+			return fil.get();
+		} else {
+			return fil.get();
+		}
+	}
 	std::size_t _spill_at;
 	std::vector<T> mem;
-	file_vector<T> fil;
+	mutable std::unique_ptr<spill_type> fil;
 };
+
+template<typename T>
+using dynamic_spill_vector = shunt<T, file_vector<T> >;
