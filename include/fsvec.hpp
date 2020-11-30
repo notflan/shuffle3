@@ -1,11 +1,15 @@
 #pragma once
 
 #include <cstdint>
+#include <cstddef>
 #include <memory>
 #include <utility>
 #include <vector>
 
 #include <panic.h>
+#include <debug.h>
+
+#include <shuffle3.h>
 
 template<typename T>
 struct i_back_inserter
@@ -15,6 +19,8 @@ struct i_back_inserter
 	virtual const T& back() const =0;
 	virtual T& back() =0;
 	virtual const std::size_t size() const =0;
+
+	inline bool is_empty() const { return size()==0; }
 
 	virtual inline ~i_back_inserter() =default;
 };
@@ -90,49 +96,68 @@ struct file_vector : public i_back_inserter<T>
 	inline const std::size_t size() const override { return len; }
 private:
 	file_back_buffer inserter;
-	std::size_t len;
+	std::size_t len=0;
 	mutable std::vector<unsigned char> current_back; // what an awful hack...
 };
 
-#define DEFAULT_SPILL_AT (1024 * 1024)
-template<typename T, std::size_t Spill = DEFAULT_SPILL_AT >
+
+template<typename T, std::size_t Spill = FSV_DEFAULT_SPILL_AT >
 	requires (Spill > 0)
 struct fixed_spill_vector : public i_back_inserter<T>
 {
 	constexpr const static std::size_t SPILL_AT = Spill;
 
-	inline fixed_spill_vector(){}
+	inline fixed_spill_vector() : mem(std::make_unique<std::array<T, Spill> >()){}
 	inline fixed_spill_vector(const fixed_spill_vector<T>& c) = delete;
 	inline fixed_spill_vector(fixed_spill_vector<T>&& m)
 		: mem(std::move(m.mem)),
 		  mem_fill_ptr(m.mem_fill_ptr),
 		  fil(std::move(m.fil))
 	{}
+	inline ~fixed_spill_vector() = default;
 
-	//TODO: Inserters/getters
 	inline void push_back(T&& value) override
 	{
-
+		if(mem_is_full()) { 
+			//D_dprintf("Inserting value into fs");
+			fil.push_back(std::move(value));
+		} else { 
+			//D_dprintf("Inserting value into memory");
+			(*mem)[++mem_fill_ptr] = value;
+		}
 	}
 	inline void pop_back() override
 	{
+		if(!size()) return;
 
+		if(fil.size()) {
+			//D_dprintf("Popping from fs");
+			fil.pop_back();
+		} else {
+			//D_dprintf("Popping from memory %ld", mem_fill_ptr);
+			mem_fill_ptr -= 1;
+		}
 	}
 	inline const T& back() const override
-	{
-
+	{	
+		if (!size()) panic("back() (const) called on no elements");
+		if(fil.size()) return fil.back();
+		else return (*mem)[mem_fill_ptr];
 	}
 	inline T& back() override
 	{
-
+		if (!size()) panic("back() called on no elements");
+		if(fil.size()) return fil.back();
+		else return (*mem)[mem_fill_ptr];
 	}
 	inline const std::size_t size() const override
 	{
-
+		return fil.size() + (std::size_t)(mem_fill_ptr+1);
 	}
 private:
-	std::array<T, Spill> mem;
-	std::size_t mem_fill_ptr;
+	inline bool mem_is_full() const { return mem_fill_ptr >= (ssize_t)(Spill-1); }
+	ssize_t mem_fill_ptr=-1;
 
+	std::unique_ptr<std::array<T, Spill>> mem;
 	file_vector<T> fil;
 };

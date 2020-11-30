@@ -18,7 +18,10 @@ extern "C" {
 
 //#define _FS_SPILL_BUFFER /* Use a file-backed buffer when unshuffling in cases of too high memory usage. Will cause massive slowdowns but can stop OOMs when unshuffling large files */
 
-//
+/// When to spill a file-backed buffer onto the fs (only used when `_FS_SPILL_BUFFER` is enabled).
+#define FSV_DEFAULT_SPILL_AT ((1024 * 1024) * 10) //10MB 
+
+//** Globals *//
 
 extern const char* _prog_name;
 

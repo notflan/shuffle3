@@ -75,6 +75,14 @@ The build and unstripped binary will be `shuffle3-debug`.
 Before switching between `release` and `debug` targets, remember to run `make clean`.
 To disable stripping of release build binaries, run with `make STRIP=: release`
 
+### Compile-time flags
+There are some build-time flags you can switch while building by appending to the `FEATURE_FLAGS` variable.
+| Flag               | Description                                                                                                                                                                                                           |
+|--------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `DEBUG`            | Pretend we're building a debug release even though we're not.                                                                                                                                                         |
+| `_FS_SPILL_BUFFER` | Spill buffers into a file if they grow over a threshold. Can cause massive slowdowns but prevent OOMs while unshuffling on systems with low available memory. See [shuffle3.h](./include/shuffle3.h) for more details |
+
+
 ## Gentoo ebuild
 There is a gentoo ebuild for this project in the overlay [test-overlay](https://git.flanchan.moe/birb/test-overlay). 
 [direct link](https://git.flanchan.moe/birb/test-overlay/src/branch/master/app-misc/shuffle3/shuffle3-2.0.0.ebuild)

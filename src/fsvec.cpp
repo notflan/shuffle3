@@ -83,7 +83,7 @@ bool FB::pop_n(size_t len)
 
 extern "C" void _fb_run_tests()
 {
-	file_vector<int> test;
+	fixed_spill_vector<int, 8> test;
 	int r0,r1=0;
 	for(int i=0;i<10;i++) {
 		D_dprintf("push: %d", (10-i));
