@@ -71,6 +71,9 @@ To build with debug information, run `make debug`. Extra debug flags can be prov
 
 The build and unstripped binary will be `shuffle3-debug`.
 
+## PGO target
+To build with Profile Guided Optimisation run `make pgo`, the stripped and optimised binary will be output to `shuffle3-pgo`.
+
 ## Notes
 Before switching between `release` and `debug` targets, remember to run `make clean`.
 To disable stripping of release build binaries, run with `make STRIP=: release`

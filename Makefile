@@ -39,6 +39,8 @@ OBJ_C   = $(addprefix obj/c/,$(SRC_C:.c=.o))
 OBJ_CXX = $(addprefix obj/cxx/,$(SRC_CXX:.cpp=.o))
 OBJ = $(OBJ_C) $(OBJ_CXX)
 
+# PGO stuff
+
 PGO_OBJ_C   = $(addprefix obj/pgo/c/,$(SRC_C:.c=.o))
 PGO_OBJ_CXX = $(addprefix obj/pgo/cxx/,$(SRC_CXX:.cpp=.o))
 PGO_OBJ = $(PGO_OBJ_C) $(PGO_OBJ_CXX)
