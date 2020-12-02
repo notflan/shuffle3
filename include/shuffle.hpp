@@ -37,18 +37,31 @@ namespace rng {
 	{
 		if(!span.size()) return;
 
-#if defined(_FS_SPILL_BUFFER) && _FS_SPILL_BUFFER == DYN
+#define DYN 2
+#define MAP 3
+#if defined(_FS_SPILL_BUFFER) && (_FS_SPILL_BUFFER == DYN)
+		D_dprintf("spill=dyn");
 		dynamic_spill_vector<std::size_t> rng_values = 
-		can_allocate<std::size_t>(span.size()) //Is there any way we can not waste this malloc() when it's valid?
-			? dynamic_spill_vector<std::size_t> (span.size())
+		//can_allocate<std::size_t>(span.size()) //Is there any way we can not waste this malloc() when it's valid?
+		span.size() <= FSV_DEFAULT_SPILL_AT
+			? dynamic_spill_vector<std::size_t> (span.size(), FSV_DEFAULT_SPILL_AT)
 			: dynamic_spill_vector<std::size_t> (FSV_DEFAULT_SPILL_AT);
-			
+#elif defined(_FS_SPILL_BUFFER) && (_FS_SPILL_BUFFER == MAP)
+		D_dprintf("spill=map");
+		mapped_spill_vector<std::size_t> rng_values =
+		span.size() <= FSV_DEFAULT_SPILL_AT
+			? mapped_spill_vector<std::size_t> (span.size(), FSV_DEFAULT_SPILL_AT)
+			: mapped_spill_vector<std::size_t> (FSV_DEFAULT_SPILL_AT, mapped_vector<std::size_t>::from_temp(span.size() - FSV_DEFAULT_SPILL_AT));
 #elif defined(_FS_SPILL_BUFFER)
+		D_dprintf("spill=static");
 		fixed_spill_vector<std::size_t> rng_values;
 #else
+		D_dprintf("spill=none");
 		std::vector<std::size_t> rng_values;
 		rng_values.reserve(span.size());
 #endif
+#undef MAP
+#undef DYN
 
 		std::cout << " -> unshuffling " << span.size() << " objects...";
 		for(std::size_t i=span.size()-1;i>0;i--)

@@ -40,6 +40,35 @@ int open_and_map(const char* file, mmap_t* restrict ptr)
 	return 1;
 }
 
+int open_and_alloc(const char* file, mmap_t* restrict ptr, size_t sz)
+{
+	int fd;
+	if ((fd = open(file, O_CREAT | O_RDWR, FILEMODE)) < 0) {
+		perror("Failed to open file");
+		return 0;
+	}
+
+	if(fallocate(fd, 0, 0, sz))
+	{
+		perror("Failed to allocate");
+		close(fd);
+		return 0;
+	}
+
+	register struct mmap map = { .fd = fd, .ptr = NULL, .len = sz };
+
+	if ((map.ptr = mmap(NULL, map.len, PROT_READ | PROT_WRITE, MAP_SHARED,fd, 0)) == MAP_FAILED) {
+		perror("mmap() failed");
+		close(fd);
+		return 0;
+	}
+
+	*ptr = map;
+
+	return 1;
+}
+
+
 int unmap_and_close(mmap_t map)
 {
 	register int rval=1;

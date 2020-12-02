@@ -85,6 +85,7 @@ There are some build-time flags you can switch while building by appending to th
 | `DEBUG`                | Pretend we're building a debug release even though we're not.                                                                                                                                                         |
 | `_FS_SPILL_BUFFER`     | Spill buffers into a file if they grow over a threshold. Can cause massive slowdowns but prevent OOMs while unshuffling on systems with low available memory. See [shuffle3.h](./include/shuffle3.h) for more details |
 | `_FS_SPILL_BUFFER=DYN` | Same as above except allocates memory dynamically. Might be faster.                                                                                                                                                   |
+| `_FS_SPILL_BUFFER=MAP` | Same as above except it calls `fallocate()` and `mmap()` to prodive a buffer of the full size needed. Is usually the fastest of the options for `_FS_SPILL_BUFFER` and is preferrable if possible.                    |
 
 
 ## Gentoo ebuild

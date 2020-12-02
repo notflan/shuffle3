@@ -15,6 +15,7 @@ typedef struct mmap {
 	size_t len;
 } mmap_t;
 
+int open_and_alloc(const char* file, mmap_t* restrict ptr, size_t sz);
 int open_and_map(const char* file, mmap_t* restrict ptr);
 int unmap_and_close(mmap_t map);
 
@@ -28,6 +29,12 @@ void* map_and_then(const char* file, map_cb callback, void* user);
 #include <cstdint>
 namespace mm {
 	struct mmap {
+		inline static mmap allocate(const char* file, std::size_t sz)
+		{
+			mmap_t map;
+			if(!open_and_alloc(file, &map, sz)) panic("Failed to allocmap file");
+			return mmap(map);
+		}
 		inline static mmap_t create_raw(const char* file)
 		{
 			mmap_t map;
@@ -35,7 +42,7 @@ namespace mm {
 			return map;
 		}
 
-		inline mmap(mmap_t raw) :inner(raw){}
+		inline explicit mmap(mmap_t raw) :inner(raw){}
 		inline mmap(const char* file)
 			: inner(create_raw(file)) {}
 

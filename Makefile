@@ -8,6 +8,7 @@ PROJECT=shuffle3
 
 # Currently supported:
 #	_FS_SPILL_BUFFER:	Use file backed buffer instead of memory backed one for unshuffling. See `shuffle3.h`.
+#				 Setting the value to `DYN` enables the dynamic buffer, setting it to `MAP` enabled memory-mapped buffer. `MAP` is usually the fastest of the 3 modes.
 #	DEBUG:		Pretend we're building a debug release even though we're not. Will enable additional output messages and may interfere with some optimisations
 FEATURE_FLAGS?=
 

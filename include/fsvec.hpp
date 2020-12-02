@@ -6,8 +6,11 @@
 #include <utility>
 #include <vector>
 
+#include <map.h>
+#include <tempfile.hpp>
 #include <panic.h>
 #include <debug.h>
+
 
 #include <shuffle3.h>
 
@@ -170,6 +173,72 @@ private:
 	file_vector<T> fil;
 };
 
+template<typename T>
+struct mapped_vector : public i_back_inserter<T>, public i_shunt
+{
+	inline static mapped_vector<T> from_temp(std::size_t sz)
+	{
+		D_dprintf("generating with %lu size", sz);
+		temp_file file;
+		mapped_vector<T> mvec(file.full_path().c_str(), sz);
+		D_dprintf("generated?");
+		mvec.temp = std::make_unique<temp_file>(std::move(file));
+		return mvec;
+	}
+	inline mapped_vector(const char* file, std::size_t sz)
+		: sz(sz),
+		  temp(nullptr), 
+		  map(mm::mmap::allocate(file, sz * sizeof(T))){}
+	inline mapped_vector(const mapped_vector<T>& c) = delete;
+	inline mapped_vector(mapped_vector<T>&& m)
+		: sz(m.sz),
+		  fill_ptr(m.fill_ptr),
+		  temp(std::move(m.temp)),
+		  map(std::move(m.map)){}
+	inline mapped_vector() : mapped_vector(nullptr, 0)
+	{
+		panic("unsupported");
+	}
+
+	inline void push_back(T&& value) override
+	{
+		if(is_full()) panic("Tried to push past end of map");
+		else memory()[++fill_ptr] = value;
+	}
+	inline void pop_back() override
+	{
+		if(fill_ptr>=0) fill_ptr-=1;
+	}
+	
+	inline T& back() override
+	{
+		if(fill_ptr>=0)
+		{
+			return memory()[fill_ptr];
+		} else panic("back() called with no elements");
+	}
+	inline const T& back() const override
+	{
+		if(fill_ptr>=0)
+		{
+			return memory()[fill_ptr];
+		} else panic("back() const called with no elements");
+	}
+	inline const std::size_t size() const override { return ((std::size_t)fill_ptr)+1; }
+	inline std::size_t cap() const { return sz; }
+	
+	inline bool is_full() const { return fill_ptr >= (ssize_t)(sz-1); }
+protected:
+	inline const span<T> memory() const { return map.as_span().reinterpret<T>(); }
+	inline span<T> memory() { return map.as_span().reinterpret<T>(); }
+private:
+	std::size_t sz;
+	ssize_t fill_ptr=-1;
+
+	std::unique_ptr<temp_file> temp;
+	mm::mmap map;
+};
+
 template<typename T, typename Shunt>
 	requires(std::is_base_of<i_back_inserter<T>, Shunt >::value)
 struct shunt : public i_back_inserter<T>, protected i_shunt
@@ -177,7 +246,15 @@ struct shunt : public i_back_inserter<T>, protected i_shunt
 	typedef Shunt spill_type;
 	
 	inline shunt() : shunt(FSV_DEFAULT_SPILL_AT){}
+	inline shunt(spill_type&& into) : shunt(FSV_DEFAULT_SPILL_AT, std::move(into)){}
 	inline shunt(std::size_t cap) : shunt(cap, cap){}
+	inline shunt(std::size_t cap, spill_type&& into) : shunt(cap, cap, std::move(into)){}
+	inline shunt(std::size_t cap, std::size_t spill, spill_type&& into)
+							 : _spill_at(spill), mem(std::vector<T>()), fil(std::make_unique<spill_type>(std::move(into))) {
+		mem.reserve(cap);
+		
+		D_dprintf("alloc (explicit) cap %lu (sz %lu == 0?), spill %lu", cap, mem.size(), spill_at());
+	}
 	inline shunt(std::size_t cap, std::size_t spill) : _spill_at(spill), mem(std::vector<T>()), fil(nullptr) {
 		mem.reserve(cap);
 		D_dprintf("alloc cap %lu (sz %lu == 0?), spill %lu", cap, mem.size(), spill_at());
@@ -242,3 +319,6 @@ private:
 
 template<typename T>
 using dynamic_spill_vector = shunt<T, file_vector<T> >;
+
+template<typename T>
+using mapped_spill_vector = shunt<T, mapped_vector<T> >; 
