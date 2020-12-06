@@ -104,7 +104,7 @@ pgo-generate: $(PGO_OBJ)
 	$(CXX) $^ $(CXXFLAGS) $(PGO_FLAGS) -o $@ $(LDFLAGS) $(PGO_LDFLAGS)
 
 pgo-reset:
-	find ./obj/pgo -name \*.gcda -exec rm {} +
+	-find ./obj/pgo -name \*.gcda -exec rm {} +
 
 pgo-profile: | pgo-reset pgo-generate
 	mkdir -p $(PGO_SET_LOC)
