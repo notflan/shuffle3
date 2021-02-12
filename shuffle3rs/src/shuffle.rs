@@ -1,7 +1,6 @@
 use rand::Rng;
 use std::mem::swap;
 
-
 /// Get a random element in this slice.
 pub fn element_in<'a, T, R: Rng + ?Sized>(slice: &'a (impl AsRef<[T]> + ?Sized), with: &mut R) -> &'a T
 {
@@ -33,8 +32,14 @@ fn shuffle_slice<T, R: Rng + ?Sized>(slice: &mut [T], with: &mut R)
     }
 }
 
-//TODO: unshuffle
+fn unshuffle_slice<T, R: Rng + ?Sized>(slice: &mut [T], with: &mut R)
+{
+    let indecies: Vec<_> = (1..slice.len()).map(|idx| with.gen_range(0..idx)).collect(); 
 
+    todo!();
+
+    drop!(indecies);
+}
 /// Shuffle this slice with this `Rng`.
 #[inline(always)] pub fn shuffle<T, R: Rng + ?Sized>(mut slice: impl AsMut<[T]>, with: &mut R)
 {
