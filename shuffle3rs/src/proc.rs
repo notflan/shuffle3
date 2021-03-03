@@ -2,6 +2,9 @@
 use super::*;
 use std::path::{Path, PathBuf};
 use std::io;
+use std::fs;
+
+use memmap::MmapMut;
 
 /// What kind of operation are we doing?
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
@@ -11,14 +14,33 @@ pub enum ModeKind
     Unshuffle
 }
 
+fn load_file_ip(file: impl AsRef<Path>) -> io::Result<memmap::MmapMut>
+{
+    let file = fs::OpenOptions::new()
+        .read(true)
+        .write(true)
+        .open(file)?;
+    Ok(unsafe {
+	MmapMut::map_mut(&file)?
+    })
+}
+
 pub fn shuffle_file_ip(file: impl AsRef<Path>) -> io::Result<()>
 {
-    todo!()	
+    let mut file = load_file_ip(file)?;
+    todo!("shuffling");
+    file.flush()?;
+
+    Ok(())
 }
 
 pub fn unshuffle_file_ip(file: impl AsRef<Path>) -> io::Result<()>
 {
-    todo!()
+    let mut file = load_file_ip(file)?;
+    todo!("unshuffling");
+    file.flush()?;
+
+    Ok(())
 }
 
 /// Process these files in place with this mode
