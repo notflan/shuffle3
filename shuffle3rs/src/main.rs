@@ -1,7 +1,7 @@
 
 #![allow(dead_code)]
 
-#[cfg(feature="deferred-drop")] #[macro_use] extern crate lazy_static;
+#[macro_use] extern crate lazy_static;
 #[macro_use] extern crate cfg_if;
 
 #[macro_use] mod ext; use ext::*;
@@ -17,7 +17,7 @@ use arg::Mode;
 ///
 /// # Method
 /// On `Err`, print the error message and then exit with error code provided
-fn handle_err_fatal<T, E>(op: Result<T, E>, errcd: i32) -> T
+#[inline] fn handle_err_fatal<T, E>(op: Result<T, E>, errcd: i32) -> T
     where E: std::error::Error
 {
     match op

@@ -11,12 +11,12 @@ pub enum ModeKind
     Unshuffle
 }
 
-pub fn shuffle_file(file: impl AsRef<Path>) -> io::Result<()>
+pub fn shuffle_file_ip(file: impl AsRef<Path>) -> io::Result<()>
 {
     todo!()	
 }
 
-pub fn unshuffle_file(file: impl AsRef<Path>) -> io::Result<()>
+pub fn unshuffle_file_ip(file: impl AsRef<Path>) -> io::Result<()>
 {
     todo!()
 }
@@ -25,6 +25,40 @@ pub fn unshuffle_file(file: impl AsRef<Path>) -> io::Result<()>
 pub fn process_files_ip<I>(files: I, mode: ModeKind) -> io::Result<()>
 where I: IntoIterator<Item = PathBuf>
 {
+    cfg_if! {
+	if #[cfg(feature="threads")] {
+	    let handles: Vec<_> = files.into_iter().map(|file| {
+		std::thread::spawn(move || {
+		    let res = match mode {
+			ModeKind::Shuffle => shuffle_file_ip(&file),
+			ModeKind::Unshuffle => unshuffle_file_ip(&file),
+		    };
+		    (res, file)
+		})
+	    }).collect();
 
-    todo!()
+	    for h in handles
+	    {
+		let (res, file) = h.join().expect("Worker thread panicked"); // TODO: How do we communicate which thread failed here? Should we even try?
+		
+		res.map_err(move |x| {
+		    eprintln!("Failed to process {:?}", file);
+		    x
+		})?;
+	    }
+	    Ok(())
+	} else {
+	    for file in files.into_iter() {
+		let res = match mode {
+		    ModeKind::Shuffle => shuffle_file_ip(&file),
+		    ModeKind::Unshuffle => unshuffle_file_ip(&file),
+		};		
+		res.map_err(move |x| {
+		    eprintln!("Failed to process {:?}", file);
+		    x
+		})?;
+	    }
+	    Ok(())
+	}
+    }
 }
