@@ -15,10 +15,13 @@ opt-level = 1
 opt-level = 1
 
 [features]
-default = ["splash", "deferred-drop"]
+default = ["splash", "deferred-drop", "threads"]
 
 # Print name and info when printing help info
 splash = []
+
+# Process multiple inputs concurrently
+threads = []
 
 # Move large objects to a seperate thread to be dropped.
 deferred-drop = []
@@ -27,7 +30,7 @@ deferred-drop = []
 cfg-if = "1.0.0"
 lazy_static = "1.4.0"
 rand = "0.8.3"
-smallvec = "1.6.1"
+smallvec = {version = "1.6.1", features=["union"]}
 
 [dev-dependencies]
 rand_chacha = "0.3.0"
