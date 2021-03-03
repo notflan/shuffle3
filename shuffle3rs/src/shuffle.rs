@@ -22,6 +22,7 @@ pub fn element_in_mut<'a, T, R: Rng + ?Sized>(slice: &'a mut (impl AsMut<[T]> + 
 
 fn shuffle_slice<T, R: Rng + ?Sized>(slice: &mut [T], with: &mut R)
 {
+    //XXX: Without optimisations this recursion causes stack overflow. Cannot work without tail call optimisation
     match slice
     {
 	&mut [] | &mut [_] => {},
@@ -34,9 +35,12 @@ fn shuffle_slice<T, R: Rng + ?Sized>(slice: &mut [T], with: &mut R)
 
 fn unshuffle_slice<T, R: Rng + ?Sized>(slice: &mut [T], with: &mut R)
 {
-    let indecies: Vec<_> = (1..slice.len()).map(|idx| with.gen_range(0..idx)).collect(); 
-
-    todo!();
+    let indecies: Vec<_> = (1..slice.len()).rev().map(|x| with.gen_range(0..x)).collect();
+    
+    for (i, &idx) in (1..slice.len()).zip(indecies.iter().rev())
+    {
+	slice.swap(i, idx);
+    }
 
     drop!(indecies);
 }
@@ -44,4 +48,9 @@ fn unshuffle_slice<T, R: Rng + ?Sized>(slice: &mut [T], with: &mut R)
 #[inline(always)] pub fn shuffle<T, R: Rng + ?Sized>(mut slice: impl AsMut<[T]>, with: &mut R)
 {
     shuffle_slice(slice.as_mut(), with)
+}
+
+#[inline(always)] pub fn unshuffle<T, R: Rng + ?Sized>(mut slice: impl AsMut<[T]>, with: &mut R)
+{
+    unshuffle_slice(slice.as_mut(), with)
 }

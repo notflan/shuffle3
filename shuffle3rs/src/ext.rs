@@ -32,7 +32,7 @@ impl<T> ShuffleExt<T> for [T]
 	shuffle::shuffle(self, rng)
     }
     #[inline] fn unshuffle<R: Rng + ?Sized>(&mut self, rng: &mut R) {
-	todo!()
+	shuffle::unshuffle(self, rng)
     }
 }
 
@@ -40,7 +40,6 @@ impl<T> ShuffleExt<T> for [T]
 #[derive(Debug, Clone)]
 pub struct Lag<I: ?Sized, T>(Duration, I)
 where I: Iterator<Item=T>;
-
 
 impl<I: ?Sized, T>  Lag<I, T>
 where I: Iterator<Item=T>

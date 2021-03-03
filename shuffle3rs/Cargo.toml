@@ -6,6 +6,14 @@ edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[profile.test]
+# Needed for tail call opt, to not cause stack overflow.
+opt-level = 1
+
+[profile.dev]
+# Needed for tail call opt, to not cause stack overflow.
+opt-level = 1
+
 [features]
 default = ["deferred-drop"]
 
@@ -16,3 +24,6 @@ deferred-drop = ["lazy_static"]
 cfg-if = "1.0.0"
 lazy_static = {version = "1.4.0", optional = true}
 rand = "0.8.3"
+
+[dev-dependencies]
+rand_chacha = "0.3.0"
