@@ -8,11 +8,11 @@
 
 #[cfg(feature="deferred-drop")] mod defer_drop;
 mod shuffle;
-
+mod arg;
 
 
 fn main() {
-    println!("Hello, world!");
+    arg::help();
 }
 
 #[cfg(test)] mod test;

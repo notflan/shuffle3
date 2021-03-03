@@ -15,14 +15,17 @@ opt-level = 1
 opt-level = 1
 
 [features]
-default = ["deferred-drop"]
+default = ["splash", "deferred-drop"]
+
+# Print name and info when printing help info
+splash = []
 
 # Move large objects to a seperate thread to be dropped.
-deferred-drop = ["lazy_static"]
+deferred-drop = []
 
 [dependencies]
 cfg-if = "1.0.0"
-lazy_static = {version = "1.4.0", optional = true}
+lazy_static = "1.4.0"
 rand = "0.8.3"
 
 [dev-dependencies]
