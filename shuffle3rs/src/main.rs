@@ -10,9 +10,24 @@
 mod shuffle;
 mod arg;
 
+use arg::Mode;
 
 fn main() {
-    arg::help();
+    match arg::parse_args()
+    {
+	Ok(Mode::Help) => arg::usage(),
+	Ok(Mode::ShuffleInPlace(file)) => {
+	    todo!()  
+	},
+	Ok(Mode::UnshuffleInPlace(file)) => {
+	    todo!()
+	},
+	Err(err) => {
+	    eprintln!("Error: {}", err);
+	    eprintln!("\nTry passing `-h`");
+	    std::process::exit(1)
+	}
+    }
 }
 
 #[cfg(test)] mod test;

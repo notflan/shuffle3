@@ -4,6 +4,8 @@ use std::iter::{FusedIterator, DoubleEndedIterator};
 use rand::Rng;
 use crate::shuffle;
 
+pub type MaybeVec<T> = smallvec::SmallVec<[T; 1]>;
+
 pub trait SliceElementExt<T>
 {
     fn random_element<R: Rng + ?Sized>(&self, rng: &mut R) -> &T;

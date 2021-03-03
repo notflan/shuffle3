@@ -27,6 +27,7 @@ deferred-drop = []
 cfg-if = "1.0.0"
 lazy_static = "1.4.0"
 rand = "0.8.3"
+smallvec = "1.6.1"
 
 [dev-dependencies]
 rand_chacha = "0.3.0"
