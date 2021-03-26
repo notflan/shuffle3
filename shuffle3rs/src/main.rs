@@ -10,6 +10,7 @@
 mod shuffle;
 mod arg;
 mod proc;
+mod rng;
 
 use arg::Mode;
 
