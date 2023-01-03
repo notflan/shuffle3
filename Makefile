@@ -12,7 +12,7 @@ PROJECT=shuffle3
 #	DEBUG:		Pretend we're building a debug release even though we're not. Will enable additional output messages and may interfere with some optimisations
 FEATURE_FLAGS?=
 
-COMMON_FLAGS = $(addprefix -D,$(FEATURE_FLAGS)) -Wall -pedantic $(addprefix -I,$(INCLUDE)) -fno-strict-aliasing
+COMMON_FLAGS+= $(addprefix -D,$(FEATURE_FLAGS)) -Wall -Wstrict-aliasing $(addprefix -I,$(INCLUDE)) -fno-strict-aliasing
 
 OPT_FLAGS?= -march=native -fgraphite -fopenmp -floop-parallelize-all -ftree-parallelize-loops=4 \
 	    -floop-interchange -ftree-loop-distribution -floop-strip-mine -floop-block \
@@ -21,14 +21,17 @@ OPT_FLAGS?= -march=native -fgraphite -fopenmp -floop-parallelize-all -ftree-para
 CXX_OPT_FLAGS?= $(OPT_FLAGS) -felide-constructors
 
 CFLAGS   += $(COMMON_FLAGS) --std=gnu11
-CXXFLAGS += $(COMMON_FLAGS) --std=gnu++20 -fno-exceptions
+CXXFLAGS += $(COMMON_FLAGS) --std=gnu++23 -fno-exceptions
 LDFLAGS  +=  
 
 STRIP=strip
 
-RELEASE_CFLAGS?=   -O3 -flto $(OPT_FLAGS)
-RELEASE_CXXFLAGS?= -O3 -flto $(CXX_OPT_FLAGS)
-RELEASE_LDFLAGS?=  -O3 -flto
+RELEASE_COMMON_FLAGS?= -DNOTRACE
+RELEASE_COMMON_FLAGS+= -DRELEASE 
+
+RELEASE_CFLAGS?=   -O3 -flto $(OPT_FLAGS) $(RELEASE_COMMON_FLAGS)
+RELEASE_CXXFLAGS?= -O3 -flto $(CXX_OPT_FLAGS) $(RELEASE_COMMON_FLAGS)
+RELEASE_LDFLAGS?=  -Wl,-O3 -Wl,-flto
 
 DEBUG_CFLAGS?= -O0 -g -DDEBUG
 DEBUG_CXXFLAGS?= $(DEBUG_CFLAGS)
@@ -111,14 +114,19 @@ pgo-profile: | pgo-reset pgo-generate
 	for i in {1..$(PGO_ITERATIONS)}; do \
 		dd if=/dev/urandom of=$(PGO_SET_LOC)/small bs=1024 count=1 >> /dev/null 2>&1; \
 		printf "Iteration $$i / $(PGO_ITERATIONS)\r"; \
-		./pgo-generate -s $(PGO_SET_LOC)/small >>/dev/null; \
-		./pgo-generate -u $(PGO_SET_LOC)/small >>/dev/null; \
-		./pgo-generate -h >> /dev/null; \
-		FCNT=1 ./test.sh ./pgo-generate >>/dev/null; \
-		FCNT=2 ./test.sh ./pgo-generate >>/dev/null; \
-		FCNT=3 ./test.sh ./pgo-generate >>/dev/null; \
-		FCNT=4 ./test.sh ./pgo-generate >>/dev/null; \
+		( echo ">> $$i" >&2; \
+		  echo ">> $$i"; \
+		./pgo-generate -s $(PGO_SET_LOC)/small; \
+		./pgo-generate -u $(PGO_SET_LOC)/small; \
+		./pgo-generate -h; \
+		FCNT=1 ./test.sh ./pgo-generate; \
+		FCNT=2 ./test.sh ./pgo-generate; \
+		FCNT=3 ./test.sh ./pgo-generate; \
+		FCNT=4 ./test.sh ./pgo-generate; \
+		) >>$(PGO_SET_LOC)/stdout.log 2>>$(PGO_SET_LOC)/stderr.log; \
 	done 
+	$(shell command -v bat >/dev/null && echo "bat --pager=none" || echo cat)	$(PGO_SET_LOC)/stdout.log; \
+	$(shell command -v bat >/dev/null && echo "bat --pager=none" || echo cat)	$(PGO_SET_LOC)/stderr.log >&2
 	rm -rf $(PGO_SET_LOC)
 	rm pgo-generate
 

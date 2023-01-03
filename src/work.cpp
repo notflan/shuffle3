@@ -1,5 +1,6 @@
 #include <tuple>
 #include <functional>
+#include <bit>
 #include <cfloat>
 
 #include <shuffle3.h>
@@ -62,12 +63,12 @@ namespace work
 
 			auto [long_l, long_h] = minmax_t(map.as_span().reinterpret<std::int64_t>());
 			D_dprintf("MMX res (u64): %ld -- %ld", long_l, long_h);
-			rng::xoroshiro128plus	xorng(*(const std::uint64_t*)&long_l, *(const std::uint64_t*)&long_h);
+			rng::xoroshiro128plus	xorng(std::bit_cast<std::uint64_t>(long_l), std::bit_cast<std::uint64_t>(long_h));
 			rng::unshuffle(xorng, map.as_span().reinterpret<std::int64_t>());
 		} else {
 			auto [long_l, long_h] = minmax_t(map.as_span().reinterpret<std::int64_t>());
 			D_dprintf("MMX res (u64): %ld -- %ld", long_l, long_h);
-			rng::xoroshiro128plus	xorng(*(const std::uint64_t*)&long_l, *(const std::uint64_t*)&long_h);
+			rng::xoroshiro128plus	xorng(std::bit_cast<std::uint64_t>(long_l), std::bit_cast<std::uint64_t>(long_h));
 			rng::shuffle(xorng, map.as_span().reinterpret<std::int64_t>());
 
 			auto [float_l, float_h] = minmax_t(map.as_span().reinterpret<float>(), [](float f) -> bool { return !( (f!=f) || f < -FLT_MAX || f > FLT_MAX); });
