@@ -42,7 +42,7 @@ dd if=/dev/urandom of=$TFILE bs=$FSIZE count=$FCNT >> /dev/null 2>&1 || exit -1
 cp $TFILE $TFILE2 || exit -1
 
 for ex in "$@"; do
-	if [[ -f "$ex" ]]; then
+	if [[ -f "${ex%% *}" ]] || command -v "${ex%% *}" >/dev/null 2>&1; then
 		echo ">>> Testing $ex"
 		stest "$ex" || exit 1
 	fi
