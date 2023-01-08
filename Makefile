@@ -22,6 +22,7 @@ CXX_OPT_FLAGS?= $(OPT_FLAGS) -felide-constructors
 
 CFLAGS   += $(COMMON_FLAGS) --std=gnu11
 CXXFLAGS += $(COMMON_FLAGS) --std=gnu++23 -fno-exceptions
+# XXX: We might need exceptions soon, for OOP usage, because we try multiple approaches from most efficient to least.
 LDFLAGS  +=  
 
 STRIP=strip
@@ -50,6 +51,8 @@ PGO_OBJ_CXX = $(addprefix obj/pgo/cxx/,$(SRC_CXX:.cpp=.o))
 PGO_OBJ = $(PGO_OBJ_C) $(PGO_OBJ_CXX)
 
 PGO_ITERATIONS=5
+PGO_BLOCKS={1..4}
+PGO_SIZE={1024..4096}
 PGO_SET_LOC?=/tmp/$(PROJECT)-pgo
 
 PGO_FLAGS  = -fprofile-generate
@@ -112,18 +115,21 @@ pgo-reset:
 pgo-profile: | pgo-reset pgo-generate
 	mkdir -p $(PGO_SET_LOC)
 	for i in {1..$(PGO_ITERATIONS)}; do \
-		dd if=/dev/urandom of=$(PGO_SET_LOC)/small bs=1024 count=1 >> /dev/null 2>&1; \
-		printf "Iteration $$i / $(PGO_ITERATIONS)\r"; \
+		block=$$(rng --of $(PGO_SIZE)); \
+		block_count=$$(rng --of $(PGO_BLOCKS)); \
+		dd if=/dev/urandom of=$(PGO_SET_LOC)/small bs=$$block count=$$block_count >> /dev/null 2>&1; \
+		printf "Iteration $$i / $(PGO_ITERATIONS) ($$block * $$block_count)\r"; \
 		( echo ">> $$i" >&2; \
 		  echo ">> $$i"; \
-		./pgo-generate -s $(PGO_SET_LOC)/small; \
-		./pgo-generate -u $(PGO_SET_LOC)/small; \
-		./pgo-generate -h; \
-		FCNT=1 ./test.sh ./pgo-generate; \
-		FCNT=2 ./test.sh ./pgo-generate; \
-		FCNT=3 ./test.sh ./pgo-generate; \
-		FCNT=4 ./test.sh ./pgo-generate; \
-		) >>$(PGO_SET_LOC)/stdout.log 2>>$(PGO_SET_LOC)/stderr.log; \
+		./pgo-generate -s $(PGO_SET_LOC)/small && \
+		./pgo-generate -u $(PGO_SET_LOC)/small && \
+		./pgo-generate -h && \
+		FCNT=1 ./test.sh ./pgo-generate && \
+		FCNT=2 ./test.sh ./pgo-generate && \
+		FCNT=3 ./test.sh ./pgo-generate && \
+		FCNT=4 ./test.sh ./pgo-generate && \
+		: \
+		) >>$(PGO_SET_LOC)/stdout.log 2>>$(PGO_SET_LOC)/stderr.log || \exit $$?; \
 	done 
 	$(shell command -v bat >/dev/null && echo "bat --pager=none" || echo cat)	$(PGO_SET_LOC)/stdout.log; \
 	$(shell command -v bat >/dev/null && echo "bat --pager=none" || echo cat)	$(PGO_SET_LOC)/stderr.log >&2

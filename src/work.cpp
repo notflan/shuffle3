@@ -48,6 +48,7 @@ namespace work
 	int xshuffle_ip(const char* file)
 	{
 		mm::mmap map(file);
+		map.access(mm::Access::Random, true);
 
 		if constexpr(unshuffle)
 		{
@@ -89,10 +90,15 @@ namespace work
 	template<bool unshuffle>
 	int xshuffle_op(const char* ifile, const char* ofile, bool is_buffered)
 	{
+		//TODO: Use libcow's `cow_create_fd()`/`Cow::Cow(fd, size)` to try to map `ifile`
+		//	Then, clone it, and use the `Fake` to do the shuffling on, and write the data to `ofile`.
+		//	If `ifile` cannot be mapped, create a shim `Cow(size(ifile))`, `sendfile()/copy_file_range()/splice()` `ifile` into the shim memory fd, and use that (do *not* clone it to a Fake,)
+		//	Then, perform the shuffling on the original `Cow`, and `sendfile()/copy_file_range()/splice()` the `ifile` file memory descriptor used for the `Cow` into `ofile`, and then destroy the `Cow`, **make sure to `msync()` the Cow'd range before the copy**.
+		mm::vmap imap; //{ifile};
 
 		if constexpr(unshuffle)
 		{
-
+			
 		} else {
 
 		}

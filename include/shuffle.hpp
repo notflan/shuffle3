@@ -14,7 +14,7 @@ namespace rng {
 	inline void shuffle(R& rng, span<T> span)
 	{
 		if(!span.size()) return;
-		std::cout << " -> shuffling " << span.size() << " objects...";
+		std::cout << " -> shuffling " << span.size() << " objects..." << std::flush;
 		for(std::size_t i=span.size()-1;i>0;i--)
 		{
 			auto j = rng.next_long(i);
@@ -63,7 +63,7 @@ namespace rng {
 #undef MAP
 #undef DYN
 
-		std::cout << " -> unshuffling " << span.size() << " objects...";
+		std::cout << " -> unshuffling " << span.size() << " objects..." << std::flush;
 		for(std::size_t i=span.size()-1;i>0;i--)
 			rng_values.push_back(rng.next_long(i));
 

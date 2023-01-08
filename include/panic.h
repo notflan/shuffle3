@@ -20,7 +20,7 @@ extern "C++" {
 	__attribute__((noreturn)) inline void _real_panic(const char* file, const char* function, int line, const char* fmt, Args&&... args)
 	{
 		panicinfo i = { file, function, line };
-		_do_panic(i, fmt, std::forward<Args>(args)...);
+		_do_panic(i, fmt, std::move(args)...);
 	}
 #define panic(fmt, ...) _real_panic(__FILE__, __func__, __LINE__, fmt __VA_OPT__(,) __VA_ARGS__)
 }
