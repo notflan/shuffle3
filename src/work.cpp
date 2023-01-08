@@ -15,8 +15,16 @@
 template<typename T, typename Fn>
 std::tuple<T, T> minmax_t(const span<T>& array, Fn keep)
 {
-	T highest;
-	T lowest;
+	T highest
+#ifdef DEBUG 
+	{}
+#endif
+	;
+	T lowest
+#ifdef DEBUG
+	{}
+#endif
+	;
 	bool init=false;
 	D_dprintf("minmax_t: %p (%lu)", array.as_ptr(), array.size());
 	for(std::size_t i=0;i<array.size();i++)
