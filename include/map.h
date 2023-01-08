@@ -37,6 +37,7 @@ int map_advise_rand(mmap_t* restrict ptr, int need);
 typedef void* (*map_cb)(mmap_t map, void* user);
 void* map_and_then(const char* file, map_cb callback, void* user);
 void* map_fd_and_then(int fd, map_cb callback, void* user);
+int unmap_and_close_s(mmap_t map, int flags);
 
 #ifdef __cplusplus
 }

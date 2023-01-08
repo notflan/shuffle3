@@ -113,6 +113,7 @@ int open_and_alloc(const char* file, mmap_t* restrict ptr, size_t sz)
 	return 1;
 }
 
+
 inline
 int unmap_and_close_s(mmap_t map, int flags)
 {
