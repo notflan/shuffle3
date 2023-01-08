@@ -6,6 +6,11 @@ INCLUDE = include
 
 PROJECT=shuffle3
 
+# Link to these libraries dynamicalls
+SHARED_LIBS= 
+# Link to these libraries statically
+STATIC_LIBS=fmt 
+
 # Currently supported:
 #	_FS_SPILL_BUFFER:	Use file backed buffer instead of memory backed one for unshuffling. See `shuffle3.h`.
 #				 Setting the value to `DYN` enables the dynamic buffer, setting it to `MAP` enabled memory-mapped buffer. `MAP` is usually the fastest of the 3 modes.
@@ -34,7 +39,7 @@ CXX_OPT_FLAGS?= $(OPT_FLAGS) -felide-constructors
 CFLAGS   += $(COMMON_FLAGS) --std=gnu11
 CXXFLAGS += $(COMMON_FLAGS) --std=gnu++23 -fno-exceptions
 # XXX: We might need exceptions soon, for OOP usage, because we try multiple approaches from most efficient to least.
-LDFLAGS  +=  
+LDFLAGS  += $(addsuffix .a,$(addprefix -l:lib,$(STATIC_LIBS))) $(addprefix -l,$(SHARED_LIBS))
 
 STRIP=strip
 
