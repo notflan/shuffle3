@@ -14,9 +14,20 @@ FEATURE_FLAGS?=
 
 COMMON_FLAGS+= $(addprefix -D,$(FEATURE_FLAGS)) -Wall -Wstrict-aliasing $(addprefix -I,$(INCLUDE)) -fno-strict-aliasing
 
-OPT_FLAGS?= -march=native -fgraphite -fopenmp -floop-parallelize-all -ftree-parallelize-loops=4 \
+ARCH?=native
+
+INTRINSICS=avx sse3
+
+OPT_FLAGS?=-fgraphite -fopenmp -floop-parallelize-all -ftree-parallelize-loops=4 \
 	    -floop-interchange -ftree-loop-distribution -floop-strip-mine -floop-block \
 	    -fno-stack-check
+
+OPT_FLAGS+=$(addprefix -m,$(INTRINSICS))
+
+ifneq ($(ARCH),)
+	OPT_FLAGS+=$(addprefix -march=,$(ARCH))
+endif
+
 
 CXX_OPT_FLAGS?= $(OPT_FLAGS) -felide-constructors
 
