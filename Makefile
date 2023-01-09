@@ -7,9 +7,9 @@ INCLUDE = include
 PROJECT=shuffle3
 
 # Link to these libraries dynamicalls
-SHARED_LIBS= 
+SHARED_LIBS=fmt 
 # Link to these libraries statically
-STATIC_LIBS=fmt 
+STATIC_LIBS= 
 
 # Currently supported:
 #	_FS_SPILL_BUFFER:	Use file backed buffer instead of memory backed one for unshuffling. See `shuffle3.h`.

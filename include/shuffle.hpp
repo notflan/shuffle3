@@ -4,22 +4,63 @@
 #include <reinterpret.h>
 #include <algorithm>
 #include <iostream>
+#include <chrono>
+
+#include <fmt/format.h>
 
 #include <fsvec.hpp>
 
+#include <perc.h>
+
 #include <shuffle3.h>
 
+
 namespace rng {
+	namespace details [[gnu::visibility("hidden")]] {
+		static inline auto make_prog(FILE* to = stdout) noexcept
+		{
+			if(isatty(fileno(to))) return pr::make_dyn(pr::Progress{to});
+			else return pr::make_dyn(pr::disable);
+		}
+
+		template<bool Create, bool UseNanos=false> 
+		static inline decltype(auto) clock(auto&... last) noexcept {
+			using namespace std::chrono;
+			if constexpr(Create) return steady_clock::now();
+			else {
+				constexpr auto take_first = [] (auto& one, auto&...) { return std::forward<decltype(one)>(one); };
+				time_point end = steady_clock::now();
+				auto& last = take_first(std::forward<decltype(last)>(last)...); //TODO: Expand this....
+				auto duration = end - last;
+				last = end;
+				if constexpr(UseNanos)
+					return duration_cast<nanoseconds>(duration).count();
+				else	return duration_cast<milliseconds>(duration).count();
+			}
+		}
+	}
 	template<typename T, typename R>
 	inline void shuffle(R& rng, span<T> span)
 	{
 		if(!span.size()) return;
+		//pr::Progress prog{stdout};
+#define MS_OKAY 100
+		auto prog = details::make_prog();
+		auto timer = clock<true>();
 		std::cout << " -> shuffling " << span.size() << " objects..." << std::flush;
+		
+		prog->spin(0);
 		for(std::size_t i=span.size()-1;i>0;i--)
 		{
 			auto j = rng.next_long(i);
 			std::swap(span[i], span[j]);
+
+			if(clock<false>(timer) >= MS_OKAY) {
+				prog->aux(fmt::format("{} <-> {}, {} / {}", i, j, span.size() - i, span.size()));
+				prog->spin(double(span.size() - i) / double(span.size()));	
+			}
 		}
+		prog->spin(1);
 		std::cout << " OK" << std::endl;
 	}
 
