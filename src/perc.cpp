@@ -8,17 +8,20 @@
 
 #include <perc.h>
 
+using fract_t = pr::Progress::fract_t;
+
 namespace {
-	size_t twidth(int fd = STDIN_FILENO, size_t or = Progress::DEFAULT_WIDTH) noexcept
+	using namespace pr;
+	size_t twidth(int fd = STDIN_FILENO, size_t orr = Progress::DEFAULT_WIDTH) noexcept
 	{
 		struct winsize w;
-		if(ioctl(fd, TIOCGWINSZ, &w) == -1) return or;
+		if(ioctl(fd, TIOCGWINSZ, &w) == -1) return orr;
 		return size_t(w.ws_col);
 	}
 
 	size_t def_bar_width(size_t tw) noexcept
 	{
-		return size_t(std::round(DEFAULT_TERM_FRACT * fract_t(tw)));
+		return size_t(std::round(Progress::DEFAULT_TERM_FRACT * fract_t(tw)));
 	}
 }
 
@@ -57,9 +60,9 @@ namespace pr {
 		size_t cf = size_t(std::floor(wf));
 
 		
-		auto print = []<typename F> (F f, auto&&... args) {
-			return fmt::format_to(std::back_inserter(buffer), std::forward<F>(f), std::forward<decltype(args)>(args)...);
-		};
+		//auto print = []<typename F> (F f, auto&&... args) {
+#define print(...) fmt::format_to(std::back_inserter(buffer), __VA_ARGS__);
+		//};
 	
 		buffer.clear();
 		// Render bar
@@ -75,11 +78,12 @@ namespace pr {
 		fprintf(out, "\r%.*s", int(buffer.size() & INT_MAX), static_cast<const char*>(buffer.data()));
 		// Flush output stream
 		if(flush) fflush(out); 
+#undef print
 	}
 	void Progress::spin(increment_t by, bool r, bool f) noexcept
 	{
 		auto& inner = *inner_;
-		inner.fract+=by;
+		inner.fract=by;
 		if(inner.fract > 1.0l)
 			inner.fract=1.0l;
 		if(r) this->render(f);
@@ -111,4 +115,21 @@ namespace pr {
 		if(inner_)
 			fputc('\n', inner_->output);
 	}
+
+
+#ifdef SPINNER
+	Spinner::~Spinner() {
+		//TODO: Add output: if(cur_) fputc('\n', output);
+	}
+
+	void Spinner::render(bool flush) {
+		/*char arr[] = {
+			'\r',
+			cur_,
+			0,
+		};
+		fputs(arr, output);
+		if(flush) fflush(output);*/
+	}
+#endif
 }
