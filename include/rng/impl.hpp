@@ -6,6 +6,8 @@
 
 /// Base class for RNG impls
 struct RNG {
+	constexpr RNG() noexcept = default;
+
 	virtual unsigned char byte();
 	virtual void bytes(unsigned char* ptr, std::size_t len);
 
@@ -29,7 +31,12 @@ struct RNG {
 	inline virtual float  next_float() { return (float)sample(); }
 	inline virtual double next_double() { return sample(); }
 
-	virtual ~RNG() = default;
+	constexpr virtual ~RNG() = default;
+
+	//explicit operator rng_t() const noexcept;
+	//friend operator RNG*(rng_t) noexcept;
 protected:
 	virtual double sample() = 0;
+//private: 
+	//struct rng_impl* _UNIQUE _held = nullptr;
 };

@@ -34,6 +34,7 @@ namespace rng
 		inline constexpr frng(const std::array<double, 2>& ar) : state(ar){P}
 		inline constexpr frng(std::array<double, 2>&& ar) : state(ar){P}
 		inline constexpr frng(const double (&ar)[2]) : state({ar[0], ar[1]}) {P}
+		constexpr virtual ~frng() = default;
 #undef P
 		inline constexpr double next_double() override { return sample(); }
 		inline constexpr float next_float() override { return (float)sample(); }

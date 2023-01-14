@@ -4,6 +4,7 @@
 #include "shuffle3.h"
 
 #ifdef __cplusplus
+#include "rng/impl.hpp"
 extern "C" {
 #endif
 
@@ -11,7 +12,11 @@ enum rng_kind {
 	RNG_KIND_FRNG,
 	RNG_KIND_DRNG,
 	RNG_KIND_XORNG,
+	RNG_KIND_LORENZ,
 };
+
+typedef long double rng_st_lorenz_t;
+typedef _Complex long double rng_lorenz_t;
 
 typedef struct rng_init
 {
@@ -25,7 +30,12 @@ typedef struct rng_init
 		} drng;
 		struct {
 			uint64_t state[2];
-		} xorng;	
+		} xorng;
+		struct {
+			rng_lorenz_t point;
+			const rng_st_lorenz_t (* _UNIQUE state)[5];
+			uint64_t iter;
+		} lorenz;
 	} init;
 
 } rng_init_opt;
@@ -38,14 +48,15 @@ void  rng_free(rng_t ptr);
 
 // Tests
 extern void rng_test();
-extern void rng_test_spec(rng_t rng);
+extern void rng_test_spec(rng_t rng) __attribute__((nonnull(1)));
 
 #ifdef __cplusplus
 }
 // RNG interfaces
-#include <rng/frng.hpp>
-#include <rng/drng.hpp>
-#include <rng/xoroshiro128plus.hpp>
+#include "rng/xoroshiro128plus.hpp"
+#include "rng/frng.hpp"
+#include "rng/drng.hpp"
+#include "rng/lorenz.hpp"
 
 namespace rng {
 	void test_algo(RNG&& rng);
